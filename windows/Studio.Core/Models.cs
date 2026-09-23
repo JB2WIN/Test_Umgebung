@@ -98,6 +98,11 @@ public class NoteTextBox
     [JsonPropertyName("xaml")] public string Xaml { get; set; } = "";
     [JsonPropertyName("text")] public string Text { get; set; } = "";
 
+    /// <summary>
+    /// Eigener Zeilenabstand, z. B. der eines eingescannten Arbeitsblatts. Leer heißt: wie das Papier.
+    /// </summary>
+    [JsonPropertyName("lineHeight")] public double? LineHeight { get; set; }
+
     /// <summary>Wird beim ersten Anzeigen aus diesem Text aufgebaut, wenn noch kein XAML da ist.</summary>
     [JsonPropertyName("seed")] public TextSeed? Seed { get; set; }
 }

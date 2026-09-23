@@ -22,8 +22,16 @@ public class InkStroke
     /// <summary>pen, pencil, marker oder shape.</summary>
     [JsonPropertyName("k")] public string Kind { get; set; } = "pen";
 
-    /// <summary>Punkte als x, y, Druck (0–1) hintereinander.</summary>
+    /// <summary>
+    /// Punkte als x, y und ein dritter Wert hintereinander. Bei alten Strichen ist das der Druck
+    /// (0–1), bei Strichen von Lernheft Pad die Breite im Verhältnis zu <see cref="Width"/>.
+    /// </summary>
     [JsonPropertyName("p")] public List<double> Points { get; set; } = new();
+
+    /// <summary>Ob der dritte Wert je Punkt die relative Breite ist (neue iPad-Striche).</summary>
+    [JsonPropertyName("wf")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool WidthFactors { get; set; }
 
     [JsonIgnore] public int Count => Points.Count / 3;
 
@@ -37,7 +45,7 @@ public class InkStroke
     {
         Points.Add(Math.Round(x, 2));
         Points.Add(Math.Round(y, 2));
-        Points.Add(Math.Round(Math.Clamp(pressure, 0, 1), 2));
+        Points.Add(Math.Round(Math.Clamp(pressure, 0, WidthFactors ? 4 : 1), 2));
     }
 
     public (double MinX, double MinY, double MaxX, double MaxY) Bounds()
@@ -62,6 +70,7 @@ public class InkStroke
         Color = Color,
         Width = Width,
         Kind = Kind,
+        WidthFactors = WidthFactors,
         Points = new List<double>(Points)
     };
 
