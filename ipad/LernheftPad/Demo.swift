@@ -26,6 +26,10 @@ enum Demo {
             return
         }
         let noteId = UUID().uuidString
+        if screen == "inktest" {
+            inkTest(session, noteId: noteId)
+            return
+        }
         session.receive(["t": PadProtocol.note, "id": noteId, "title": "Quadratische Funktionen", "subject": "Mathe",
                          "color": "#2F5BEA", "paper": "grid", "pageCount": 2, "pageWidth": 800])
         var strokes: [JSON] = []
@@ -42,6 +46,65 @@ enum Demo {
             session.receive(["t": PadProtocol.text, "noteId": noteId, "page": 0, "scale": 3, "data": text.base64EncodedString()])
         }
         session.receive(["t": PadProtocol.view, "noteId": noteId, "top": 0, "height": 700])
+    }
+
+    /// Messbild: wie breit zeichnet PencilKit Striche bei welcher Punktgröße und welchem Druck?
+    private static func inkTest(_ session: PadSession, noteId: String) {
+        session.receive(["t": PadProtocol.note, "id": noteId, "title": "Strichtest", "subject": "",
+                         "color": "#2F5BEA", "paper": "blank", "pageCount": 1, "pageWidth": 800])
+        session.receive(["t": PadProtocol.ink, "noteId": noteId, "strokes": [JSON]()])
+        var strokes: [PKStroke] = []
+        let widths: [CGFloat] = [1, 2, 3, 5, 8]
+        let rows: [(label: String, dense: Bool, force: CGFloat, ink: PKInk.InkType)] = [
+            ("2 Punkte, Druck 1", false, 1, .pen),
+            ("dicht, Druck 1", true, 1, .pen),
+            ("dicht, Druck 0,5", true, 0.5, .pen),
+            ("dicht, Druck 2", true, 2, .pen),
+            ("dicht, Druck 4", true, 4, .pen),
+            ("Monoline, Druck 1", true, 1, .monoline),
+            ("Bleistift, Druck 1", true, 1, .pencil),
+            ("Marker, Druck 1", true, 1, .marker)
+        ]
+        for (row, entry) in rows.enumerated() {
+            let y = 80 + CGFloat(row) * 60
+            for (column, width) in widths.enumerated() {
+                let x = 260 + CGFloat(column) * 105
+                var locations = [CGPoint(x: x, y: y), CGPoint(x: x + 90, y: y)]
+                if entry.dense { locations = InkBridge.densify(locations) }
+                var time: TimeInterval = 0
+                var points: [PKStrokePoint] = []
+                for (index, location) in locations.enumerated() {
+                    if index > 0 { time += Double(hypot(location.x - locations[index - 1].x, 0)) / 350 }
+                    points.append(PKStrokePoint(location: location, timeOffset: time, size: CGSize(width: width, height: width),
+                                                opacity: 1, force: entry.force, azimuth: 0, altitude: .pi / 2))
+                }
+                let path = PKStrokePath(controlPoints: points, creationDate: InkBridge.uniqueDate())
+                strokes.append(PKStroke(ink: PKInk(entry.ink, color: UIColor(hex: "#1A1F2B")), path: path))
+            }
+        }
+        // Vergleich: So breit zeichnet das Surface dieselben Werte (Rechtecke genau in Punktgröße).
+        let size = CGSize(width: 800, height: 1120)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 3
+        format.opaque = false
+        let image = UIGraphicsImageRenderer(size: size, format: format).image { context in
+            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 15), .foregroundColor: UIColor.systemGray]
+            for (row, entry) in rows.enumerated() {
+                (entry.label as NSString).draw(at: CGPoint(x: 24, y: 70 + CGFloat(row) * 60), withAttributes: attributes)
+            }
+            let y = 80 + CGFloat(rows.count) * 60
+            ("Soll-Breite" as NSString).draw(at: CGPoint(x: 24, y: y - 10), withAttributes: attributes)
+            UIColor.systemRed.setFill()
+            for (column, width) in widths.enumerated() {
+                let x = 260 + CGFloat(column) * 105
+                context.fill(CGRect(x: x, y: y - width / 2, width: 90, height: width))
+                ("\(Int(width)) pt" as NSString).draw(at: CGPoint(x: x + 30, y: 40), withAttributes: attributes)
+            }
+        }
+        if let data = image.pngData() {
+            session.receive(["t": PadProtocol.text, "noteId": noteId, "page": 0, "scale": 3, "data": data.base64EncodedString()])
+        }
+        session.canvas.addStrokes(strokes)
     }
 
     private static func scribble(x: CGFloat, y: CGFloat, width: CGFloat) -> [PortableStroke] {

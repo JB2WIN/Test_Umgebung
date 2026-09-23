@@ -121,7 +121,38 @@ enum InkBridge {
         return result
     }
 
+    /// Lange gerade Stücke in kleine Schritte teilen – PencilKit zeichnet Striche mit nur
+    /// zwei weit auseinanderliegenden Stützpunkten sonst kaum sichtbar.
+    static func densify(_ points: [CGPoint], step: CGFloat = 3) -> [CGPoint] {
+        guard points.count >= 2 else { return points }
+        var result: [CGPoint] = [points[0]]
+        for index in 1..<points.count {
+            let a = points[index - 1], b = points[index]
+            let steps = max(1, Int((hypot(b.x - a.x, b.y - a.y) / step).rounded(.up)))
+            for part in 1...steps {
+                let t = CGFloat(part) / CGFloat(steps)
+                result.append(CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t))
+            }
+        }
+        return result
+    }
+
     static func stroke(_ portable: PortableStroke) -> PKStroke {
+        var portable = portable
+        if portable.count >= 2, portable.count <= 6 {
+            // Wenige, weit verteilte Punkte (Achsen, Kreuze vom Surface): auffüllen.
+            var locations: [CGPoint] = []
+            var thirds: [Double] = []
+            for index in 0..<portable.count {
+                locations.append(CGPoint(x: portable.points[index * 3], y: portable.points[index * 3 + 1]))
+                thirds.append(portable.points[index * 3 + 2])
+            }
+            let dense = densify(locations)
+            if dense.count > locations.count {
+                let average = thirds.reduce(0, +) / Double(thirds.count)
+                portable.points = dense.flatMap { [Double($0.x), Double($0.y), average] }
+            }
+        }
         let count = portable.count
         var points: [PKStrokePoint] = []
         points.reserveCapacity(max(count, 2))
@@ -204,8 +235,9 @@ enum InkBridge {
     }
 
     /// Einfacher Strich durch die angegebenen Punkte – für Graphen, Kreuze und Formen.
-    static func line(points: [CGPoint], width: CGFloat, color: UIColor) -> PKStroke? {
-        guard points.count >= 2 else { return nil }
+    static func line(points input: [CGPoint], width: CGFloat, color: UIColor) -> PKStroke? {
+        guard input.count >= 2 else { return nil }
+        let points = densify(input)
         let size = CGSize(width: width, height: width)
         var time: TimeInterval = 0
         var strokePoints: [PKStrokePoint] = []

@@ -82,6 +82,7 @@ jobs:
           shoot select 04-select
           shoot function 05-function
           shoot settings 06-settings
+          shoot inktest 07-inktest
           xcrun simctl ui "$UDID" appearance dark
           shoot connect 11-connect-dark
           shoot draw 13-draw-dark
