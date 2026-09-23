@@ -1,0 +1,108 @@
+name: Lernheft Pad (iPad)
+
+on:
+  push:
+    paths:
+      - "ipad/**"
+      - ".github/workflows/ipad.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 50
+    defaults:
+      run:
+        working-directory: ipad
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+
+      - name: Xcode-Projekt erzeugen
+        run: xcodegen generate
+
+      - name: App bauen (unsigniert, für das iPad)
+        run: |
+          xcodebuild -project LernheftPad.xcodeproj -scheme LernheftPad -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build/device \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build > build.log 2>&1 || { grep -E "error:" build.log | sort -u; tail -n 60 build.log; exit 1; }
+          grep -E "warning:" build.log | grep -v "appintents" | sort -u | head -n 60 || true
+
+      - name: IPA packen
+        run: |
+          mkdir -p Payload
+          cp -R build/device/Build/Products/Release-iphoneos/LernheftPad.app Payload/
+          zip -qr LernheftPad.ipa Payload
+          ls -la LernheftPad.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LernheftPad-ipa
+          path: ipad/LernheftPad.ipa
+
+      - name: Bildschirmfotos im Simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          pads = [d for runtime, entries in devices.items() if 'iOS' in runtime for d in entries if 'iPad' in d['name']]
+          pads.sort(key=lambda d: (0 if 'Air 11' in d['name'] else 1 if 'Pro 11' in d['name'] else 2, d['name']))
+          print(pads[0]['udid'])")
+          echo "Simulator: $UDID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcodebuild -project LernheftPad.xcodeproj -scheme LernheftPad -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO \
+            build > sim.log 2>&1 || { grep -E "error:" sim.log | sort -u; tail -n 40 sim.log; exit 1; }
+          xcrun simctl install "$UDID" build/sim/Build/Products/Debug-iphonesimulator/LernheftPad.app
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+          mkdir -p ../shots/ipad
+          shoot() {
+            xcrun simctl terminate "$UDID" de.lernheft.pad 2>/dev/null || true
+            xcrun simctl launch "$UDID" de.lernheft.pad -demo "$1"
+            sleep 7
+            xcrun simctl io "$UDID" screenshot "../shots/ipad/$2.png"
+          }
+          xcrun simctl ui "$UDID" appearance light
+          shoot connect 01-connect
+          shoot picker 02-picker
+          shoot draw 03-draw
+          shoot select 04-select
+          shoot function 05-function
+          shoot settings 06-settings
+          xcrun simctl ui "$UDID" appearance dark
+          shoot connect 11-connect-dark
+          shoot draw 13-draw-dark
+          shoot select 14-select-dark
+          ls -la ../shots/ipad
+
+      - name: Build-Log hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: |
+            ipad/build.log
+            ipad/sim.log
+
+      - name: Bildschirmfotos in Zweig ablegen
+        if: always()
+        working-directory: .
+        run: |
+          mkdir -p shots/ipad
+          cd shots
+          git init -q
+          git checkout -q -b ci-shots-ipad
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          cp ../ipad/build.log ipad/ 2>/dev/null || true
+          echo "${GITHUB_SHA}" > ipad/commit.txt
+          git add -A
+          git commit -q -m "Bildschirmfotos für ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ci-shots-ipad
