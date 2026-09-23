@@ -87,12 +87,6 @@ final class Link {
     }
 
     /// Schickt eine Nachricht. `completion` meldet, wann sie wirklich raus ist (für große Dateien).
-    /// Nur für Bildschirmfotos: tut so, als wäre ein Surface verbunden.
-    func startDemo(name: String) {
-        serverName = name
-        phase = .connected
-    }
-
     func send(_ message: JSON, completion: ((Bool) -> Void)? = nil) {
         guard !isClosed, let data = PadProtocol.encode(message) else {
             completion?(false)
