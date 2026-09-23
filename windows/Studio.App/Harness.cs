@@ -15,6 +15,7 @@ public static class Harness
 {
     private static string _folder = "";
     private static readonly List<string> Problems = new();
+    private static readonly List<string> Info = new();
 
     public static void Run(Application app, string folder)
     {
@@ -36,7 +37,8 @@ public static class Harness
             {
                 Problems.Add("Abbruch: " + error);
             }
-            File.WriteAllLines(Path.Combine(folder, "harness.log"), Problems.Count == 0 ? new[] { "ok" } : Problems);
+            File.WriteAllLines(Path.Combine(folder, "harness.log"),
+                (Problems.Count == 0 ? (IEnumerable<string>)new[] { "ok" } : Problems.Prepend("FEHLER")).Concat(Info));
             try { Services.Pad.Dispose(); }
             catch (Exception) { }
             app.Shutdown(Problems.Count == 0 ? 0 : 1);
@@ -142,6 +144,7 @@ public static class Harness
                     null, new Rect(0, 0, width, height));
             }
             bitmap.Render(visual);
+            Info.Add($"{name}: {width:0}×{height:0} bei {dpi.PixelsPerInchX:0} dpi");
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
             using var file = File.Create(Path.Combine(_folder, name + ".png"));

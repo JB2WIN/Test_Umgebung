@@ -1,0 +1,82 @@
+name: Lernheft Studio (Windows)
+
+on:
+  push:
+    paths:
+      - "windows/**"
+      - "installer/**"
+      - ".github/workflows/windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Tests
+        run: dotnet test windows/Studio.Tests -c Release --logger "console;verbosity=normal"
+
+      - name: App veröffentlichen
+        run: >
+          dotnet publish windows/Studio.App/Studio.App.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none -o windows/dist/app
+
+      - name: Bildschirm auf 1920×1080
+        continue-on-error: true
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
+      - name: Bildschirmfotos
+        shell: pwsh
+        run: |
+          $shots = "$env:GITHUB_WORKSPACE\shots\windows"
+          New-Item -ItemType Directory -Force $shots | Out-Null
+          $p = Start-Process -FilePath "windows\dist\app\LernheftStudio.exe" -ArgumentList "--shots", "`"$shots`"" -PassThru
+          if (-not $p.WaitForExit(300000)) { $p.Kill(); Write-Error "Zeitüberschreitung" }
+          Get-Content "$shots\harness.log"
+          Get-ChildItem $shots | Format-Table Name, Length
+
+      - name: Installer bauen
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          $version = "1.0.$env:GITHUB_RUN_NUMBER"
+          wix build installer/Studio.wxs -arch x64 -d Version=$version -d PublishDir=windows\dist\app -d IconFile=windows\Studio.App\app.ico -o windows\dist\LernheftStudio.msi
+          Get-Item windows\dist\LernheftStudio.msi | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LernheftStudio-Installer
+          path: windows/dist/LernheftStudio.msi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Bildschirmfotos-Windows
+          path: shots/windows
+
+      - name: Bildschirmfotos in Zweig ablegen
+        if: always()
+        shell: bash
+        run: |
+          [ -d shots/windows ] || exit 0
+          cd shots
+          git init -q
+          git checkout -q -b ci-shots-windows
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          cp ../windows/dist/LernheftStudio.msi windows/ 2>/dev/null || true
+          echo "${GITHUB_SHA}" > windows/commit.txt
+          git add -A
+          git commit -q -m "Bildschirmfotos für ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ci-shots-windows

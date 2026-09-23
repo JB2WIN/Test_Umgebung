@@ -1,0 +1,49 @@
+<!--
+  Installationspaket für Lernheft Studio. Pro Benutzer, ohne Administratorrechte:
+  landet in %LOCALAPPDATA%\Programs\Lernheft Studio, mit Startmenü- und Desktop-Verknüpfung.
+  Eigene UpgradeCode – unabhängig von der alten Lernheft-App, beide können nebeneinander bestehen.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Lernheft Studio"
+           Manufacturer="Lernheft"
+           Version="$(Version)"
+           UpgradeCode="8cea493e-c18f-42e8-bc2f-340f421f6a5c"
+           Scope="perUser"
+           Language="1031"
+           Codepage="1252">
+
+    <MajorUpgrade DowngradeErrorMessage="Eine neuere Version von Lernheft Studio ist schon installiert." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="AppIcon" SourceFile="$(IconFile)" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/JB2WIN/Test_Umgebung" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="Lernheft Studio" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="Main" Title="Lernheft Studio">
+      <Component Id="App" Directory="INSTALLFOLDER" Guid="3f2f6c52-5b1e-4d7c-9a51-0b7f2a6c1e11">
+        <File Id="StudioExe" Source="$(PublishDir)\LernheftStudio.exe" />
+        <RegistryValue Root="HKCU" Key="Software\Lernheft\Studio" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveProgramsFolder" Directory="ProgramsFolder" On="uninstall" />
+      </Component>
+      <Component Id="StartMenu" Directory="ProgramMenuFolder" Guid="9a3e1c07-66f4-4b8e-b2d5-5f1c0d7e8a21">
+        <Shortcut Id="StartMenuShortcut" Name="Lernheft Studio" Description="Notizen, Handschrift vom iPad, Hausaufgaben und Karteikarten"
+                  Target="[INSTALLFOLDER]LernheftStudio.exe" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
+        <RegistryValue Root="HKCU" Key="Software\Lernheft\Studio" Name="StartMenu" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="Desktop" Directory="DesktopFolder" Guid="c1d7f3a4-2e8b-4f60-8c3d-7b4a9e0f5d32">
+        <Shortcut Id="DesktopShortcut" Name="Lernheft Studio" Target="[INSTALLFOLDER]LernheftStudio.exe" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
+        <RegistryValue Root="HKCU" Key="Software\Lernheft\Studio" Name="Desktop" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </Feature>
+  </Package>
+</Wix>
