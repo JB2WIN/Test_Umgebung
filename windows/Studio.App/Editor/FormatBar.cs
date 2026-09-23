@@ -73,11 +73,9 @@ public sealed class FormatBar : Border
 
         foreach (var name in TextDocs.InstalledFonts())
         {
-            _font.Items.Add(new ComboBoxItem
-            {
-                Content = new TextBlock { Text = name, FontFamily = TextDocs.Family(name), FontSize = 14 },
-                Tag = name
-            });
+            // Text statt Element: So zeigt das geschlossene Feld den Namen sauber in einer Zeile,
+            // die Liste darunter jede Schrift in ihrer eigenen Gestalt.
+            _font.Items.Add(new ComboBoxItem { Content = name, FontFamily = TextDocs.Family(name), FontSize = 14, Tag = name });
         }
         foreach (var size in TextDocs.Sizes) _size.Items.Add(new ComboBoxItem { Content = size.ToString("0"), Tag = size });
         _font.SelectionChanged += (_, _) =>
