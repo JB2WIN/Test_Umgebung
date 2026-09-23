@@ -203,7 +203,7 @@
         <Style x:Key="ToolToggle" TargetType="ToggleButton">
             <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="FontFamily" Value="{StaticResource IconFont}"/>
+            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="MinWidth" Value="32"/>
             <Setter Property="Height" Value="32"/>
@@ -235,6 +235,8 @@
         </Style>
 
         <Style x:Key="ToolButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+            <!-- Symbole setzen ihre Schrift selbst; Beschriftungen daneben brauchen die normale Schrift. -->
+            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
             <Setter Property="Width" Value="Auto"/>
             <Setter Property="MinWidth" Value="32"/>
             <Setter Property="Height" Value="32"/>

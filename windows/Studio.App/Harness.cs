@@ -62,6 +62,7 @@ public static class Harness
             main.CloseNoteForShots();
             await Settle();
             Save(main, "01-home" + suffix);
+            if (!dark) Describe(main.SearchBoxForShots, "Suchfeld");
 
             main.OpenNote(Demo.MathNote);
             await Settle(900);
@@ -118,6 +119,18 @@ public static class Harness
         }
     }
 
+    /// Größen aller Teile eines Elements – hilft, Abstände aus der Ferne zu prüfen.
+    private static void Describe(DependencyObject element, string label, int depth = 0)
+    {
+        if (depth > 8) return;
+        if (element is FrameworkElement framework)
+        {
+            var padding = element is System.Windows.Controls.Control control ? $" pad {control.Padding}" : element is System.Windows.Controls.Border border ? $" pad {border.Padding}" : "";
+            Info.Add($"{label}: {new string(' ', depth * 2)}{element.GetType().Name} {framework.ActualWidth:0.#}×{framework.ActualHeight:0.#} margin {framework.Margin}{padding}");
+        }
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++) Describe(VisualTreeHelper.GetChild(element, i), label, depth + 1);
+    }
+
     private static async Task Settle(int milliseconds = 400)
     {
         await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
@@ -130,20 +143,17 @@ public static class Harness
         try
         {
             window.UpdateLayout();
-            if (window.Content is not FrameworkElement content) return;
+            // Die Wurzel der Fenstervorlage – mit Ebene für Platzhalter und Rahmen, genau wie auf dem Bildschirm.
+            if (VisualTreeHelper.GetChildrenCount(window) == 0 || VisualTreeHelper.GetChild(window, 0) is not FrameworkElement root) return;
             var dpi = VisualTreeHelper.GetDpi(window);
-            var width = content.ActualWidth;
-            var height = content.ActualHeight;
+            var width = root.ActualWidth;
+            var height = root.ActualHeight;
             var bitmap = new RenderTargetBitmap((int)Math.Ceiling(width * dpi.DpiScaleX), (int)Math.Ceiling(height * dpi.DpiScaleY),
                 dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
-            var visual = new DrawingVisual();
-            using (var context = visual.RenderOpen())
-            {
-                context.DrawRectangle(window.Background, null, new Rect(0, 0, width, height));
-                context.DrawRectangle(new VisualBrush(content) { Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top },
-                    null, new Rect(0, 0, width, height));
-            }
-            bitmap.Render(visual);
+            var background = new DrawingVisual();
+            using (var context = background.RenderOpen()) context.DrawRectangle(window.Background, null, new Rect(0, 0, width, height));
+            bitmap.Render(background);
+            bitmap.Render(root);
             Info.Add($"{name}: {width:0}×{height:0} bei {dpi.PixelsPerInchX:0} dpi");
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmap));

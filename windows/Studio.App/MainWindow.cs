@@ -50,6 +50,10 @@ public sealed class MainWindow : Window
     private Guid? _notebookId;
     private Guid? _openNoteId;
     private bool _listsHidden;
+    /// Im schmalen Fenster klappen die Listen beim Schreiben von selbst weg – außer man holt sie bewusst zurück.
+    private bool _listsForced;
+
+    private bool ListsCollapsed => _listsHidden || (!_listsForced && _openNoteId is not null && ActualWidth < 1120);
     private bool _updating;
     private BonjourAdvertiser? _bonjour;
 
@@ -124,7 +128,7 @@ public sealed class MainWindow : Window
         SettingsWindow.Applied += () => _editor.RefreshEnvironment();
 
         InputBindings.Add(new KeyBinding(new Command(() => NewNote(null)), Key.N, ModifierKeys.Control));
-        InputBindings.Add(new KeyBinding(new Command(() => { if (_listsHidden) ToggleLists(); _search.Focus(); _search.SelectAll(); }), Key.F, ModifierKeys.Control));
+        InputBindings.Add(new KeyBinding(new Command(() => { if (ListsCollapsed) ToggleLists(); _search.Focus(); _search.SelectAll(); }), Key.F, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(new Command(ToggleLists), Key.F11, ModifierKeys.None));
         InputBindings.Add(new KeyBinding(new Command(() => OpenSettings()), Key.OemComma, ModifierKeys.Control));
 
@@ -666,7 +670,9 @@ public sealed class MainWindow : Window
         _editor.Visibility = Visibility.Collapsed;
         _homeScroller.Visibility = Visibility.Visible;
         RebuildHome();
-        if (_listsHidden) ToggleLists();
+        _listsHidden = false;
+        _listsForced = false;
+        FitColumns();
     }
 
     public void OpenNote(Guid id)
@@ -687,7 +693,8 @@ public sealed class MainWindow : Window
         _homeScroller.Visibility = Visibility.Collapsed;
         _editor.Visibility = Visibility.Visible;
         _editor.Open(id);
-        if (Services.Settings.GetBool(Keys.HideListsWhileWriting, false) && !_listsHidden) ToggleLists();
+        if (Services.Settings.GetBool(Keys.HideListsWhileWriting, false)) _listsHidden = true;
+        FitColumns();
     }
 
     private void CloseNote()
@@ -695,8 +702,10 @@ public sealed class MainWindow : Window
         if (_openNoteId is null) return;
         _editor.Leave();
         _openNoteId = null;
+        _listsForced = false;
         _editor.Visibility = Visibility.Collapsed;
         _homeScroller.Visibility = Visibility.Visible;
+        FitColumns();
     }
 
     private void NewNote(Guid? notebookId)
@@ -717,13 +726,22 @@ public sealed class MainWindow : Window
 
     private void ToggleLists()
     {
-        _listsHidden = !_listsHidden;
+        if (ListsCollapsed)
+        {
+            _listsHidden = false;
+            _listsForced = true;
+        }
+        else
+        {
+            _listsHidden = true;
+            _listsForced = false;
+        }
         FitColumns();
     }
 
     private void FitColumns()
     {
-        if (_listsHidden)
+        if (ListsCollapsed)
         {
             _sidebarColumn.Width = new GridLength(0);
             _listColumn.Width = new GridLength(0);
@@ -752,6 +770,8 @@ public sealed class MainWindow : Window
     }
 
     // MARK: - Für die automatische Sichtprüfung
+
+    internal TextBox SearchBoxForShots => _search;
 
     internal void CloseNoteForShots()
     {

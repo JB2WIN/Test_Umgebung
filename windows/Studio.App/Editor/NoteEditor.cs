@@ -527,8 +527,12 @@ public sealed class NoteEditor : UserControl
     private void FitZoom()
     {
         if (Note is null) return;
-        var available = Math.Max(200, _scroller.ViewportWidth > 0 ? _scroller.ViewportWidth : _scroller.ActualWidth) - 48;
-        var fit = Math.Clamp(available / Note.Width, 0.5, 1.4);
+        // Rand links und rechts plus etwas Luft für den Seitenschatten – sonst taucht ein unnötiger Querbalken auf.
+        var available = Math.Max(200, _scroller.ViewportWidth > 0 ? _scroller.ViewportWidth : _scroller.ActualWidth) - 48 - 6;
+        var fit = Math.Clamp(Math.Floor(available / Note.Width * 1000) / 1000, 0.5, 1.4);
+        _scroller.HorizontalScrollBarVisibility = _zoomFactor > 1.001 || available < Note.Width * 0.5
+            ? ScrollBarVisibility.Auto
+            : ScrollBarVisibility.Disabled;
         var zoom = Math.Clamp(fit * _zoomFactor, 0.35, 4);
         if (Math.Abs(_scale.ScaleX - zoom) > 0.001)
         {
