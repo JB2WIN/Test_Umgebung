@@ -1,0 +1,16 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+windows/dist/
+*.msi
+*.wixpdb
+
+# iPad
+*.xcodeproj/
+build/
+DerivedData/
+Payload/
+*.ipa
+.DS_Store
