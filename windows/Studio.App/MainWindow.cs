@@ -50,6 +50,8 @@ public sealed class MainWindow : Window
     private Guid? _notebookId;
     private Guid? _openNoteId;
     private bool _listsHidden;
+    private UIElement _sidebar = null!;
+    private UIElement _list = null!;
     /// Im schmalen Fenster klappen die Listen beim Schreiben von selbst weg – außer man holt sie bewusst zurück.
     private bool _listsForced;
 
@@ -83,8 +85,10 @@ public sealed class MainWindow : Window
         root.ColumnDefinitions.Add(_listColumn);
         root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         var sidebar = BuildSidebar();
+        _sidebar = sidebar;
         root.Children.Add(sidebar);
         var list = BuildList();
+        _list = list;
         Grid.SetColumn(list, 1);
         root.Children.Add(list);
         BuildContent();
@@ -741,7 +745,10 @@ public sealed class MainWindow : Window
 
     private void FitColumns()
     {
-        if (ListsCollapsed)
+        var collapsed = ListsCollapsed;
+        _sidebar.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        _list.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        if (collapsed)
         {
             _sidebarColumn.Width = new GridLength(0);
             _listColumn.Width = new GridLength(0);

@@ -316,9 +316,17 @@ public static class Placeholder
         if (layer is null) return;
         var adorner = new PlaceholderAdorner(box, text);
         layer.Add(adorner);
-        void Refresh() => adorner.Visibility = box.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        // Adorner liegen über allem – ist das Feld weggeklappt oder winzig, darf der Hinweis nicht stehen bleiben.
+        void Refresh() => adorner.Visibility = box.Text.Length == 0 && box.IsVisible && box.ActualWidth >= 40
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         box.TextChanged += (_, _) => Refresh();
         box.IsVisibleChanged += (_, _) => Refresh();
+        box.SizeChanged += (_, _) =>
+        {
+            Refresh();
+            adorner.InvalidateVisual();
+        };
         Refresh();
     }
 

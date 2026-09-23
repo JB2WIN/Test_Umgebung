@@ -27,7 +27,8 @@ public sealed class FormatBar : Border
     private readonly ToggleButton _numbers;
     private readonly Border _colorBar = new() { Height = 3, Width = 14, CornerRadius = new CornerRadius(1.5), Margin = new Thickness(0, 1, 0, 0) };
     private readonly Border _highlightBar = new() { Height = 3, Width = 14, CornerRadius = new CornerRadius(1.5), Margin = new Thickness(0, 1, 0, 0) };
-    private readonly StackPanel _formatGroup = new() { Orientation = Orientation.Horizontal };
+    /// <summary>Bricht im schmalen Fenster in eine zweite Zeile um, statt Knöpfe abzuschneiden.</summary>
+    private readonly WrapPanel _formatGroup = new() { Orientation = Orientation.Horizontal };
     private bool _updating;
 
     private Color? _lastColor = Theme.Hex("#DC3B3B");
@@ -100,40 +101,49 @@ public sealed class FormatBar : Border
         _bullets = Toggle(Ui.Icon(Ui.GlyphBullets, 14), "Aufzählung", () => Command(EditingCommands.ToggleBullets));
         _numbers = Toggle(Letter("1."), "Nummerierung", () => Command(EditingCommands.ToggleNumbering));
 
-        _formatGroup.Children.Add(_font);
-        _formatGroup.Children.Add(Gap(6));
-        _formatGroup.Children.Add(_size);
-        _formatGroup.Children.Add(Separator());
-        _formatGroup.Children.Add(_bold);
-        _formatGroup.Children.Add(_italic);
-        _formatGroup.Children.Add(_underline);
-        _formatGroup.Children.Add(_strike);
-        _formatGroup.Children.Add(Separator());
-        _formatGroup.Children.Add(ColorButton());
-        _formatGroup.Children.Add(HighlightButton());
-        _formatGroup.Children.Add(Separator());
-        _formatGroup.Children.Add(_bullets);
-        _formatGroup.Children.Add(_numbers);
-        _formatGroup.Children.Add(Tool(Letter("⇤"), "Einzug verkleinern", () => Command(EditingCommands.DecreaseIndentation)));
-        _formatGroup.Children.Add(Tool(Letter("⇥"), "Einzug vergrößern", () => Command(EditingCommands.IncreaseIndentation)));
-        _formatGroup.Children.Add(Separator());
-        _formatGroup.Children.Add(_superscript);
-        _formatGroup.Children.Add(_subscript);
-        _formatGroup.Children.Add(Tool(Ui.Icon(Ui.GlyphClear, 13), "Formatierung entfernen", () => Apply(box => box.ClearFormatting())));
+        AddGroup(_font, Gap(6), _size);
+        AddGroup(_bold, _italic, _underline, _strike);
+        AddGroup(ColorButton(), HighlightButton());
+        AddGroup(_bullets, _numbers,
+            Tool(Letter("⇤"), "Einzug verkleinern", () => Command(EditingCommands.DecreaseIndentation)),
+            Tool(Letter("⇥"), "Einzug vergrößern", () => Command(EditingCommands.IncreaseIndentation)));
+        AddGroup(_superscript, _subscript,
+            Tool(Ui.Icon(Ui.GlyphClear, 13), "Formatierung entfernen", () => Apply(box => box.ClearFormatting())));
+        // Steht eine Gruppe nach dem Umbruch vorn in der Zeile, braucht sie keinen Trennstrich.
+        _formatGroup.LayoutUpdated += (_, _) =>
+        {
+            foreach (var (group, separator) in _groups)
+            {
+                if (separator is null || !group.IsVisible) continue;
+                var x = group.TranslatePoint(new Point(0, 0), _formatGroup).X;
+                var wanted = x < 4 ? Visibility.Hidden : Visibility.Visible;
+                if (separator.Visibility != wanted) separator.Visibility = wanted;
+            }
+        };
 
         var dock = new DockPanel { LastChildFill = true };
         DockPanel.SetDock(Right, Dock.Right);
         dock.Children.Add(Right);
-        var scroller = new ScrollViewer
-        {
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Content = _formatGroup,
-            Focusable = false
-        };
-        dock.Children.Add(scroller);
+        _formatGroup.VerticalAlignment = VerticalAlignment.Center;
+        dock.Children.Add(_formatGroup);
         Child = dock;
         Update(null);
+    }
+
+    private readonly List<(StackPanel Group, Border? Separator)> _groups = new();
+
+    private void AddGroup(params UIElement[] items)
+    {
+        var group = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 1, 0, 1) };
+        Border? separator = null;
+        if (_groups.Count > 0)
+        {
+            separator = Separator();
+            group.Children.Add(separator);
+        }
+        foreach (var item in items) group.Children.Add(item);
+        _formatGroup.Children.Add(group);
+        _groups.Add((group, separator));
     }
 
     private static FrameworkElement Gap(double width) => new Border { Width = width };
