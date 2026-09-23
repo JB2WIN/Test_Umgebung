@@ -127,11 +127,16 @@ public sealed class SettingsWindow : StudioWindow
             Applied?.Invoke();
         });
 
-    private static TextBlock Status() => new() { TextWrapping = TextWrapping.Wrap, FontSize = 12.5, Margin = new Thickness(0, 10, 0, 0) };
+    /// <summary>Meldezeile unter Knöpfen – nimmt erst Platz ein, wenn etwas drinsteht.</summary>
+    private static TextBlock Status() => new()
+    {
+        TextWrapping = TextWrapping.Wrap, FontSize = 12.5, Margin = new Thickness(0, 10, 0, 0), Visibility = Visibility.Collapsed
+    };
 
     private static void Say(TextBlock status, string text, string color)
     {
         status.Text = text;
+        status.Visibility = text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         status.SetResourceReference(TextBlock.ForegroundProperty, color);
     }
 

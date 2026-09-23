@@ -11,7 +11,7 @@ public sealed class HomeworkWindow : SheetWindow
 {
     private static readonly CultureInfo German = new("de-DE");
     private readonly StackPanel _lists = new();
-    private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, FontSize = 12.5 };
+    private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, FontSize = 12.5, Visibility = Visibility.Collapsed };
     private readonly TextBox _title;
     private readonly ComboBox _subject = new() { Width = 170 };
     private readonly ComboBox _due = new() { Width = 170 };
@@ -72,6 +72,7 @@ public sealed class HomeworkWindow : SheetWindow
             scan.IsEnabled = false;
             _status.SetResourceReference(TextBlock.ForegroundProperty, "Muted");
             _status.Text = "Lese deine Notizen …";
+            _status.Visibility = Visibility.Visible;
             _status.Text = await ScanNotesAsync(progress => _status.Text = progress);
             scan.IsEnabled = true;
             Rebuild();

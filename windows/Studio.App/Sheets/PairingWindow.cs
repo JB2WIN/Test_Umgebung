@@ -51,7 +51,7 @@ public sealed class PairingWindow : SheetWindow
 
         var steps = new StackPanel { Margin = new Thickness(28, 0, 0, 0) };
         steps.Children.Add(Step("1", "Öffne auf dem iPad „Lernheft Pad“."));
-        steps.Children.Add(Step("2", "Tippe auf „Mit Surface verbinden“ und scanne den QR-Code. Oder tippe den Code ein."));
+        steps.Children.Add(Step("2", "Halte die Kamera auf den QR-Code – oder wähle „Code eingeben“ und tippe die sechs Ziffern ab."));
         steps.Children.Add(Step("3", "Fertig. Was du auf dem iPad zeichnest, erscheint sofort in der Notiz, die hier offen ist."));
         steps.Children.Add(Ui.Hint("Beide Geräte müssen im selben WLAN sein. Später verbindet sich das iPad von allein, "
             + "ein neuer Code ist dann nicht nötig.", new Thickness(0, 6, 0, 0)));

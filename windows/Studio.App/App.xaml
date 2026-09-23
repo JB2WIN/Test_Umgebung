@@ -314,7 +314,7 @@
                     <ControlTemplate TargetType="TextBox">
                         <Border x:Name="Back" CornerRadius="7" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Focusable="False"
                                           HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
                         </Border>
@@ -386,7 +386,7 @@
                     <ControlTemplate TargetType="PasswordBox">
                         <Border x:Name="Back" CornerRadius="7" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" Focusable="False"
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" Focusable="False"
                                           VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
