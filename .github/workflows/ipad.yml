@@ -65,6 +65,7 @@ jobs:
           echo "Warte auf den Simulator …"
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" build/sim/Build/Products/Debug-iphonesimulator/LernheftPad.app
+          xcrun simctl privacy "$UDID" grant camera de.lernheft.pad || true
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
           mkdir -p ../shots/ipad
           shoot() {

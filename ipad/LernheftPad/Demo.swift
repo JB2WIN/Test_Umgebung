@@ -64,9 +64,12 @@ enum Demo {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 3
         format.opaque = false
+        // Wie das Surface: im Dunkelmodus kommt der Text hell.
+        let dark = UIScreen.main.traitCollection.userInterfaceStyle == .dark
+        let ink = UIColor(hex: dark ? "#E9EEF4" : "#16202C")
         let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            let title: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 22, weight: .semibold), .foregroundColor: UIColor(hex: "#16202C")]
-            let body: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 17), .foregroundColor: UIColor(hex: "#16202C")]
+            let title: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 22, weight: .semibold), .foregroundColor: ink]
+            let body: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 17), .foregroundColor: ink]
             ("Scheitelpunktform" as NSString).draw(at: CGPoint(x: 64, y: 38), withAttributes: title)
             ("f(x) = a(x − d)² + e" as NSString).draw(at: CGPoint(x: 64, y: 72), withAttributes: body)
             ("Der Scheitelpunkt liegt bei S(d | e)." as NSString).draw(at: CGPoint(x: 64, y: 104), withAttributes: body)

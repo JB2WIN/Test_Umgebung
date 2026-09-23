@@ -41,7 +41,7 @@ struct SettingsView: View {
 
                 Section("Surface") {
                     HStack {
-                        Label(connection.pairing?.serverName ?? "Nicht gekoppelt", systemImage: "laptopcomputer")
+                        Label(connection.pairing?.serverName ?? (connection.serverName.isEmpty ? "Nicht gekoppelt" : connection.serverName), systemImage: "laptopcomputer")
                         Spacer()
                         statusBadge
                     }

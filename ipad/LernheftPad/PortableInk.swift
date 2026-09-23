@@ -125,15 +125,22 @@ enum InkBridge {
         let count = portable.count
         var points: [PKStrokePoint] = []
         points.reserveCapacity(max(count, 2))
+        // Zeitstempel nach zurückgelegter Strecke: gleichmäßiges „Schreibtempo“, sonst macht
+        // PencilKit schnelle Abschnitte dünn und blass.
+        var time: TimeInterval = 0
+        var previous: CGPoint?
         for index in 0..<count {
             let x = portable.points[index * 3]
             let y = portable.points[index * 3 + 1]
+            let location = CGPoint(x: x, y: y)
+            if let previous { time += max(0.002, Double(hypot(location.x - previous.x, location.y - previous.y)) / 350) }
+            previous = location
             let third = portable.points[index * 3 + 2]
             let width = portable.widthFactors ? portable.width * max(third, 0.05) : portable.width
             let force = portable.widthFactors ? 1 : max(third, 0.05)
             points.append(PKStrokePoint(
-                location: CGPoint(x: x, y: y),
-                timeOffset: Double(index) * 0.008,
+                location: location,
+                timeOffset: time,
                 size: CGSize(width: width, height: width),
                 opacity: 1,
                 force: CGFloat(force),
@@ -200,9 +207,15 @@ enum InkBridge {
     static func line(points: [CGPoint], width: CGFloat, color: UIColor) -> PKStroke? {
         guard points.count >= 2 else { return nil }
         let size = CGSize(width: width, height: width)
-        let strokePoints = points.enumerated().map { index, location in
-            PKStrokePoint(location: location, timeOffset: TimeInterval(index) * 0.004, size: size,
-                          opacity: 1, force: 1, azimuth: 0, altitude: .pi / 2)
+        var time: TimeInterval = 0
+        var strokePoints: [PKStrokePoint] = []
+        for (index, location) in points.enumerated() {
+            if index > 0 {
+                let last = points[index - 1]
+                time += max(0.002, Double(hypot(location.x - last.x, location.y - last.y)) / 350)
+            }
+            strokePoints.append(PKStrokePoint(location: location, timeOffset: time, size: size,
+                                              opacity: 1, force: 1, azimuth: 0, altitude: .pi / 2))
         }
         let path = PKStrokePath(controlPoints: strokePoints, creationDate: uniqueDate())
         return PKStroke(ink: PKInk(.pen, color: color), path: path, transform: .identity, mask: nil)

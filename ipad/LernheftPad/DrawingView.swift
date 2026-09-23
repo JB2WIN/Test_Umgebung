@@ -41,7 +41,7 @@ struct DrawingView: View {
                 desk.ignoresSafeArea(edges: .bottom)
                 PadCanvas(
                     controller: canvas,
-                    drawingEnabled: mode == .draw && connected && session.note != nil,
+                    drawingEnabled: mode == .draw && connected && session.note != nil && !showFunction && !showSettings && !showNotes,
                     zoomLocked: zoomLocked,
                     fingerDrawing: fingerDrawing
                 )
@@ -235,15 +235,17 @@ struct DrawingView: View {
                     action("Begradigen", "line.diagonal") { transform(InkTools.straighten) }
                     action("Löschen", "trash", role: .destructive) { deleteSelection() }
                 }
-                Spacer(minLength: 12)
-                Button("Fertig") {
-                    mode = .draw
-                    selection = nil
-                }
-                .buttonStyle(.borderedProminent)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
+        }
+        .safeAreaInset(edge: .trailing, spacing: 0) {
+            Button("Fertig") {
+                mode = .draw
+                selection = nil
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.horizontal, 12)
         }
         .background(.bar)
     }
@@ -381,16 +383,17 @@ struct DrawingView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(points.count < 2 || !connected)
-
-                Spacer(minLength: 12)
-                Button("Fertig") {
-                    mode = .draw
-                    points = []
-                }
-                .buttonStyle(.bordered)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
+        }
+        .safeAreaInset(edge: .trailing, spacing: 0) {
+            Button("Fertig") {
+                mode = .draw
+                points = []
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal, 12)
         }
         .background(.bar)
     }
