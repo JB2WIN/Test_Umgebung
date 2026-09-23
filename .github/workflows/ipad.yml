@@ -47,6 +47,7 @@ jobs:
           path: ipad/LernheftPad.ipa
 
       - name: Bildschirmfotos im Simulator
+        timeout-minutes: 25
         run: |
           UDID=$(xcrun simctl list devices available -j | python3 -c "
           import json, sys
@@ -56,10 +57,13 @@ jobs:
           print(pads[0]['udid'])")
           echo "Simulator: $UDID"
           xcrun simctl boot "$UDID" || true
-          xcrun simctl bootstatus "$UDID" -b
+          echo "::group::Build für den Simulator"
           xcodebuild -project LernheftPad.xcodeproj -scheme LernheftPad -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO \
             build > sim.log 2>&1 || { grep -E "error:" sim.log | sort -u; tail -n 40 sim.log; exit 1; }
+          echo "::endgroup::"
+          echo "Warte auf den Simulator …"
+          xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" build/sim/Build/Products/Debug-iphonesimulator/LernheftPad.app
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
           mkdir -p ../shots/ipad
@@ -68,6 +72,7 @@ jobs:
             xcrun simctl launch "$UDID" de.lernheft.pad -demo "$1"
             sleep 7
             xcrun simctl io "$UDID" screenshot "../shots/ipad/$2.png"
+            echo "Foto: $2"
           }
           xcrun simctl ui "$UDID" appearance light
           shoot connect 01-connect
