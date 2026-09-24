@@ -121,7 +121,9 @@ final class BackdropView: UIView {
         format.opaque = true
         return UIGraphicsImageRenderer(size: size, format: format).image { context in
             paperColor(dark: dark).setFill()
-            context.fill(CGRect(origin: .zero, size: size))
+            // Bei krummen Zoomstufen ist die Kachel keine ganze Pixelzahl breit – etwas größer füllen,
+            // sonst bleibt am Rand eine halbe, dunkle Pixelspalte stehen (sieht aus wie Kästchen).
+            context.fill(CGRect(x: 0, y: 0, width: size.width + 2, height: size.height + 2))
             lineColor(dark: dark).setFill()
             let line = max(1, zoom.rounded(.down))
             switch style {
