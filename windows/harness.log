@@ -1,0 +1,46 @@
+ok
+01-home: 1424×861 bei 96 dpi
+Suchfeld: TextBox 271×34 margin 14,0,14,10 pad 9,7,9,7
+Suchfeld:   Border 271×34 margin 0,0,0,0 pad 0,0,0,0
+Suchfeld:     ScrollViewer 269×32 margin 0,0,0,0 pad 9,7,9,7
+Suchfeld:       Grid 269×32 margin 0,0,0,0
+Suchfeld:         Rectangle 0×0 margin 0,0,0,0
+Suchfeld:         ScrollContentPresenter 251×18 margin 9,7,9,7
+Suchfeld:           TextBoxView 247×18 margin 2,0,2,0
+Suchfeld:           AdornerLayer 251×18 margin 0,0,0,0
+Suchfeld:         ScrollBar 0×0 margin 0,0,0,0 pad 0,0,0,0
+Suchfeld:         ScrollBar 0×0 margin 0,0,0,0 pad 0,0,0,0
+02-note-math: 1424×861 bei 96 dpi
+03-note-text: 1424×861 bei 96 dpi
+04-note-editing: 1424×861 bei 96 dpi
+05-note-narrow: 884×721 bei 96 dpi
+10-settings-ai: 964×721 bei 96 dpi
+11-settings-writing: 964×721 bei 96 dpi
+11-settings-appearance: 964×721 bei 96 dpi
+11-settings-homework: 964×721 bei 96 dpi
+11-settings-pad: 964×721 bei 96 dpi
+11-settings-backup: 964×721 bei 96 dpi
+11-settings-usage: 964×721 bei 96 dpi
+11-settings-about: 964×721 bei 96 dpi
+20-pairing: 704×721 bei 96 dpi
+21-homework: 644×741 bei 96 dpi
+22-flashcards: 744×741 bei 96 dpi
+23-timetable: 704×781 bei 96 dpi
+24-legacy: 704×781 bei 96 dpi
+25-function: 544×740 bei 96 dpi
+26-ai: 704×761 bei 96 dpi
+27-notebook: 454×394 bei 96 dpi
+01-home-dark: 1424×861 bei 96 dpi
+02-note-math-dark: 1424×861 bei 96 dpi
+03-note-text-dark: 1424×861 bei 96 dpi
+04-note-editing-dark: 1424×861 bei 96 dpi
+05-note-narrow-dark: 884×721 bei 96 dpi
+10-settings-ai-dark: 964×721 bei 96 dpi
+20-pairing-dark: 704×721 bei 96 dpi
+21-homework-dark: 644×741 bei 96 dpi
+22-flashcards-dark: 744×741 bei 96 dpi
+23-timetable-dark: 704×781 bei 96 dpi
+24-legacy-dark: 704×781 bei 96 dpi
+25-function-dark: 544×740 bei 96 dpi
+26-ai-dark: 704×761 bei 96 dpi
+27-notebook-dark: 454×394 bei 96 dpi
