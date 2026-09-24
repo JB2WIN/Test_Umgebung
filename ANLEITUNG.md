@@ -93,6 +93,11 @@ In Lernheft Stift unter **Werkzeuge** (Kacheln oben):
 - **Foto einfügen** – aus deinen Fotos (auch mehrere),
 - **Seiten scannen** – mit der Kamera: Blattkanten werden erkannt und begradigt, alle Seiten kommen als ein PDF.
 
+**Aus der Vorschau-App (oder jeder anderen App):** PDF in der Vorschau öffnen, markieren, unterschreiben,
+zuschneiden … dann **Teilen → Lernheft Stift**. Lernheft Stift öffnet sich und fragt, wohin die Datei soll:
+in die offene Notiz (**als neue Seiten** oder **hier**) oder **als neue Notiz**. Ist das Surface gerade nicht
+verbunden, wartet die Datei, bis die Verbindung steht.
+
 Danach fragt das iPad: **Als neue Seiten** oder **Hier auf der Seite** (an der Stelle, die du gerade siehst).
 Das Surface fügt ohne Rückfrage ein, und die Seiten erscheinen gleich auch auf dem iPad zum Beschreiben.
 Ist am Surface keine Notiz offen, geht das auch von der Notizauswahl aus – dann entsteht eine neue Notiz.

@@ -42,6 +42,9 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: session.connection.isConnected)
+        // Aus einer anderen App geteilt (z. B. Vorschau): Datei annehmen und ans Surface geben.
+        .onOpenURL { url in session.receiveShared(url) }
+        .modifier(SharedFileFlow())
         .onAppear { session.themeChanged(dark: colorScheme == .dark) }
         .onChange(of: colorScheme) { _, scheme in session.themeChanged(dark: scheme == .dark) }
     }

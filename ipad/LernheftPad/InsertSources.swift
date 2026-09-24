@@ -244,3 +244,61 @@ extension View {
         modifier(InsertFlow(source: source, newNote: newNote))
     }
 }
+
+/// Nimmt Dateien an, die aus einer anderen App geteilt wurden, und fragt, wohin sie sollen.
+/// Ist das Surface gerade nicht verbunden, wartet die Datei, bis die Verbindung steht.
+struct SharedFileFlow: ViewModifier {
+    @Environment(PadSession.self) private var session
+    @State private var files: [OutgoingFile] = []
+    @State private var ask = false
+
+    private var ready: Bool { session.connection.isConnected && session.knowsNote }
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: session.shared.count) { _, _ in present() }
+            .onChange(of: ready) { _, _ in present() }
+            .overlay(alignment: .top) {
+                if !session.shared.isEmpty && !ready {
+                    Label("„\(session.shared[0].name)“ wartet – wird eingefügt, sobald das Surface verbunden ist.", systemImage: "tray.and.arrow.down")
+                        .font(.callout)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.thickMaterial, in: Capsule())
+                        .padding(.top, 60)
+                }
+            }
+            .confirmationDialog(title, isPresented: $ask, titleVisibility: .visible) {
+                if session.note != nil {
+                    Button("Als neue Seiten in „\(session.note?.title ?? "Notiz")“") { send("pages", newNote: false) }
+                    Button("Hier auf der Seite") { send("here", newNote: false) }
+                }
+                Button("Als neue Notiz") { send("pages", newNote: true) }
+                Button("Abbrechen", role: .cancel) { files = [] }
+            } message: {
+                Text("Aus einer anderen App geteilt – wohin damit?")
+            }
+    }
+
+    private var title: String {
+        files.count == 1 ? "„\(files[0].name)“ einfügen" : "\(files.count) Dateien einfügen"
+    }
+
+    private func present() {
+        guard ready, !ask, !session.shared.isEmpty else { return }
+        let incoming = session.takeShared()
+        let total = incoming.reduce(0) { $0 + $1.data.count }
+        guard total <= InsertSources.maxBytes else {
+            session.show("Die Datei ist mit \(total / 1_048_576) MB zu groß.")
+            return
+        }
+        files = incoming
+        ask = true
+    }
+
+    private func send(_ placement: String, newNote: Bool) {
+        let outgoing = files
+        files = []
+        session.insertFiles(outgoing, placement: placement, newNote: newNote)
+    }
+}

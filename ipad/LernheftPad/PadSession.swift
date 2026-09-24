@@ -301,6 +301,31 @@ final class PadSession {
         show(mode == "math" ? "Die Lösung erscheint am Surface." : "Der KI-Helfer ist am Surface offen.")
     }
 
+    /// Dateien, die eine andere App (z. B. Vorschau) mit Lernheft Stift geteilt hat – warten auf „wohin?“.
+    private(set) var shared: [OutgoingFile] = []
+
+    func receiveShared(_ url: URL) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let result = Result { try InsertSources.load(url) }
+            // Kopien im Posteingang der App nicht liegen lassen.
+            if url.path.contains("/Inbox/") { try? FileManager.default.removeItem(at: url) }
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let file):
+                    self.shared.append(file)
+                case .failure(let error):
+                    self.show("Die geteilte Datei ließ sich nicht lesen: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    func takeShared() -> [OutgoingFile] {
+        let files = shared
+        shared = []
+        return files
+    }
+
     /// PDFs, Fotos, Scans oder Texte vom iPad in die Notiz am Surface.
     /// „pages“ hängt sie als neue Seiten an, „here“ setzt sie an die Stelle, die das iPad zeigt.
     func insertFiles(_ files: [OutgoingFile], placement: String, newNote: Bool) {

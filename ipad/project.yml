@@ -28,6 +28,21 @@ targets:
           - _lernheftpad._tcp
         NSCameraUsageDescription: "Mit der Kamera liest Lernheft Stift den QR-Code am Surface und scannt Seiten für deine Notizen."
         NSPhotoLibraryUsageDescription: "Lernheft Stift fügt ausgewählte Fotos in die Notiz am Surface ein."
+        # Damit Lernheft Stift beim Teilen auftaucht (z. B. in der Vorschau-App: Teilen → Lernheft Stift).
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: PDF-Dokument
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.adobe.pdf]
+          - CFBundleTypeName: Bild
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.image]
+          - CFBundleTypeName: Text
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.plain-text, public.rtf, net.daringfireball.markdown]
+        LSSupportsOpeningDocumentsInPlace: false
         UILaunchScreen: {}
         UIApplicationSupportsIndirectInputEvents: true
         UIRequiresFullScreen: false
