@@ -91,6 +91,25 @@ enum InkBridge {
         }
     }
 
+    /// Wie breit PencilKit einen Punkt der Größe `size` tatsächlich zeichnet (am Simulator vermessen):
+    /// Der Stift wird bei kleinen Größen deutlich dünner – unter 2 pt fast unsichtbar.
+    static func renderedWidth(size: Double, kind: String) -> Double {
+        switch kind {
+        case "marker": return max(0.5, size)
+        case "pencil": return max(0.4, size * 1.5)
+        default: return max(0.3, size * 1.84 - 3.1)
+        }
+    }
+
+    /// Umkehrung: Welche Punktgröße braucht PencilKit für eine gewünschte sichtbare Breite?
+    static func pointSize(width: Double, kind: String) -> CGFloat {
+        switch kind {
+        case "marker": return CGFloat(max(0.5, width))
+        case "pencil": return CGFloat(max(0.3, width / 1.5))
+        default: return CGFloat((max(0.3, width) + 3.1) / 1.84)
+        }
+    }
+
     /// Ein PencilKit-Strich wird zu einem oder – wenn der Radierer ihn zerteilt hat – mehreren Strichen.
     static func portable(_ stroke: PKStroke, ids: [String]? = nil) -> [PortableStroke] {
         let transform = stroke.transform
@@ -104,7 +123,7 @@ enum InkBridge {
             var widths: [Double] = []
             for point in stroke.path.interpolatedPoints(in: range, by: .distance(sampleDistance)) {
                 locations.append(point.location.applying(transform))
-                widths.append(Double(max(point.size.width * scale, 0.2)))
+                widths.append(renderedWidth(size: Double(point.size.width * scale), kind: inkKind))
             }
             guard !locations.isEmpty else { continue }
             let mean = widths.reduce(0, +) / Double(widths.count)
@@ -167,7 +186,8 @@ enum InkBridge {
             if let previous { time += max(0.002, Double(hypot(location.x - previous.x, location.y - previous.y)) / 350) }
             previous = location
             let third = portable.points[index * 3 + 2]
-            let width = portable.widthFactors ? portable.width * max(third, 0.05) : portable.width
+            let visible = portable.widthFactors ? portable.width * max(third, 0.05) : portable.width
+            let width = pointSize(width: visible, kind: portable.kind)
             let force = portable.widthFactors ? 1 : max(third, 0.05)
             points.append(PKStrokePoint(
                 location: location,
@@ -238,7 +258,9 @@ enum InkBridge {
     static func line(points input: [CGPoint], width: CGFloat, color: UIColor) -> PKStroke? {
         guard input.count >= 2 else { return nil }
         let points = densify(input)
-        let size = CGSize(width: width, height: width)
+        // `width` ist die sichtbare Breite – PencilKit braucht dafür eine etwas größere Punktgröße.
+        let pointWidth = pointSize(width: Double(width), kind: "pen")
+        let size = CGSize(width: pointWidth, height: pointWidth)
         var time: TimeInterval = 0
         var strokePoints: [PKStrokePoint] = []
         for (index, location) in points.enumerated() {

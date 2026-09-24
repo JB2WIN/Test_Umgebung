@@ -348,9 +348,12 @@ final class CanvasController: NSObject, PKCanvasViewDelegate, UIGestureRecognize
 
     var toolColor: UIColor { (canvas?.tool as? PKInkingTool)?.color ?? UIColor(hex: "#1A1F2B") }
 
+    /// Sichtbare Breite des gewählten Stifts – passend für gezeichnete Kurven und Kreuze.
     var toolWidth: CGFloat {
-        guard let width = (canvas?.tool as? PKInkingTool)?.width else { return 2.4 }
-        return min(max(width, 1.5), 6)
+        guard let tool = canvas?.tool as? PKInkingTool else { return 2.4 }
+        let kind = InkBridge.kind(of: PKInk(tool.inkType, color: tool.color))
+        let visible = InkBridge.renderedWidth(size: Double(tool.width), kind: kind == "marker" ? "pen" : kind)
+        return CGFloat(min(max(visible, 1.5), 6))
     }
 
     var drawing: PKDrawing { PKDrawing(strokes: strokes) }
@@ -603,7 +606,7 @@ final class CanvasController: NSObject, PKCanvasViewDelegate, UIGestureRecognize
         liveFinished = false
         liveBuffer.removeAll()
         let kind = InkBridge.kind(of: PKInk(tool.inkType, color: tool.color))
-        let width = kind == "marker" ? Double(tool.width) : Double(tool.width) * 0.9
+        let width = InkBridge.renderedWidth(size: Double(tool.width), kind: kind)
         liveTemplate = ["c": tool.color.hexString, "w": (width * 10).rounded() / 10, "k": kind, "wf": true]
         liveSentAt = .distantPast
         collect(touch, event)
