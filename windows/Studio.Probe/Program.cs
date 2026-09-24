@@ -67,8 +67,9 @@ var finished = await Task.WhenAny(done.Task, Task.Delay(TimeSpan.FromMinutes(8))
 string result;
 lock (received) result = finished == done.Task ? done.Task.Result : "FEHLT – empfangen: " + string.Join(", ", received);
 Log(result);
-await Task.Delay(4000);
 File.WriteAllText(Path.Combine(folder, "result.txt"), result);
+// Noch kurz verbunden bleiben, damit das Bildschirmfoto die Bestätigung zeigt.
+await Task.Delay(8000);
 server.Dispose();
 return finished == done.Task ? 0 : 1;
 

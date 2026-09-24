@@ -51,9 +51,13 @@ enum PadProtocol {
 
     static func message(_ type: String) -> JSON { ["t": type] }
 
+    /// Schreibt Zahlen so kurz wie möglich („102.15“ statt „102.15000000000001“) – Striche
+    /// bestehen aus Tausenden Zahlen, das spart gut die Hälfte der Übertragung.
     static func encode(_ message: JSON) -> Data? {
-        guard JSONSerialization.isValidJSONObject(message) else { return nil }
-        return try? JSONSerialization.data(withJSONObject: message)
+        var output = ""
+        output.reserveCapacity(256)
+        guard JSONWriter.write(message, into: &output) else { return nil }
+        return output.data(using: .utf8)
     }
 
     static func decode(_ data: Data) -> JSON? {
@@ -105,5 +109,70 @@ struct PairingOffer: Equatable {
         hosts = (values["h"] ?? "").split(separator: ",").map { String($0) }.filter { !$0.isEmpty }
         port = UInt16(values["p"] ?? "") ?? PadProtocol.studioPort
         self.secret = secret
+    }
+}
+
+enum JSONWriter {
+    static func write(_ value: Any, into output: inout String) -> Bool {
+        switch value {
+        case let text as String:
+            writeString(text, into: &output)
+        case let flag as Bool where !(value is NSNumber) || CFGetTypeID(value as CFTypeRef) == CFBooleanGetTypeID():
+            output += flag ? "true" : "false"
+        case let number as Int:
+            output += String(number)
+        case let number as Double:
+            guard number.isFinite else { return false }
+            output += number == number.rounded() && abs(number) < 1e15 ? String(Int64(number)) : String(number)
+        case let number as CGFloat:
+            return write(Double(number), into: &output)
+        case let number as Float:
+            return write(Double(number), into: &output)
+        case let number as NSNumber:
+            return write(number.doubleValue, into: &output)
+        case let list as [Any]:
+            output += "["
+            for (index, item) in list.enumerated() {
+                if index > 0 { output += "," }
+                guard write(item, into: &output) else { return false }
+            }
+            output += "]"
+        case let object as [String: Any]:
+            output += "{"
+            var first = true
+            for (key, item) in object {
+                if !first { output += "," }
+                first = false
+                writeString(key, into: &output)
+                output += ":"
+                guard write(item, into: &output) else { return false }
+            }
+            output += "}"
+        case is NSNull:
+            output += "null"
+        default:
+            return false
+        }
+        return true
+    }
+
+    private static func writeString(_ text: String, into output: inout String) {
+        output += "\""
+        for scalar in text.unicodeScalars {
+            switch scalar {
+            case "\"": output += "\\\""
+            case "\\": output += "\\\\"
+            case "\n": output += "\\n"
+            case "\r": output += "\\r"
+            case "\t": output += "\\t"
+            default:
+                if scalar.value < 0x20 {
+                    output += String(format: "\\u%04X", scalar.value)
+                } else {
+                    output.unicodeScalars.append(scalar)
+                }
+            }
+        }
+        output += "\""
     }
 }
