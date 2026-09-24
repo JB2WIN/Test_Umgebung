@@ -37,15 +37,7 @@ public static class InkRenderer
             return;
         }
 
-        if (stroke.WidthFactors && stroke.Kind is not "marker")
-        {
-            var outline = Outline(stroke, width);
-            if (outline is not null)
-            {
-                context.DrawGeometry(brush, null, outline);
-                return;
-            }
-        }
+        if (stroke.WidthFactors && stroke.Kind is not "marker" && DrawVariable(context, stroke, width, color, opacity)) return;
 
         var pen = new Pen(brush, width)
         {
@@ -90,82 +82,83 @@ public static class InkRenderer
         return geometry;
     }
 
-    /// <summary>Umriss eines Strichs mit wechselnder Breite (wie ein Füller).</summary>
-    private static Geometry? Outline(InkStroke stroke, double baseWidth)
+    /// <summary>
+    /// Strich mit wechselnder Breite (wie ein Füller): in Abschnitte gleicher Breite geteilt, jeder als
+    /// runde, geglättete Linie. Anders als ein einziger Umriss kann sich das in engen Kurven der
+    /// Handschrift nicht verdrehen – keine Löcher, keine „Perlenkette“.
+    /// </summary>
+    private static bool DrawVariable(DrawingContext context, InkStroke stroke, double baseWidth, Color color, double opacity)
     {
         var count = stroke.Count;
-        var points = new List<(Point P, double W)>(count);
+        var points = new List<Point>(count);
+        var raw = new List<double>(count);
         for (var index = 0; index < count; index++)
         {
             var (x, y, factor) = stroke.PointAt(index);
-            var w = baseWidth * Math.Clamp(factor <= 0 ? 1 : factor, 0.25, 2.5);
             var point = new Point(x, y);
-            if (points.Count > 0 && (points[^1].P - point).Length < 0.35) continue;
-            points.Add((point, w));
+            if (points.Count > 0 && (points[^1] - point).Length < 0.35) continue;
+            points.Add(point);
+            raw.Add(baseWidth * Math.Clamp(factor <= 0 ? 1 : factor, 0.35, 2.5));
         }
-        if (points.Count < 2) return null;
+        if (points.Count < 2) return false;
 
-        // Breiten leicht glätten, damit der Rand nicht zittert.
-        var widths = points.Select(p => p.W).ToArray();
-        for (var pass = 0; pass < 2; pass++)
+        // Breiten glätten: Druckschwankungen einzelner Punkte sollen den Strich nicht zittern lassen.
+        var widths = raw.ToArray();
+        for (var pass = 0; pass < 3; pass++)
         {
             var copy = (double[])widths.Clone();
             for (var i = 1; i < widths.Length - 1; i++) widths[i] = (copy[i - 1] + 2 * copy[i] + copy[i + 1]) / 4;
         }
+        // In feinen Stufen, damit gleich breite Stücke zusammen gezeichnet werden können.
+        var step = Math.Max(0.15, baseWidth * 0.08);
+        double Level(int segment) => Math.Max(0.5, Math.Round((widths[segment] + widths[segment + 1]) / 2 / step) * step);
 
-        var left = new List<Point>(points.Count);
-        var right = new List<Point>(points.Count);
-        for (var i = 0; i < points.Count; i++)
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        // Deckkraft für den ganzen Strich auf einmal – überlappende Stücke werden so nicht dunkler.
+        if (opacity < 1) context.PushOpacity(opacity);
+        var start = 0;
+        while (start < points.Count - 1)
         {
-            var previous = points[Math.Max(0, i - 1)].P;
-            var next = points[Math.Min(points.Count - 1, i + 1)].P;
-            var direction = next - previous;
-            if (direction.Length < 0.0001) direction = new Vector(1, 0);
-            direction.Normalize();
-            var normal = new Vector(-direction.Y, direction.X) * (widths[i] / 2);
-            left.Add(points[i].P + normal);
-            right.Add(points[i].P - normal);
+            var level = Level(start);
+            var end = start + 1;
+            while (end < points.Count - 1 && Math.Abs(Level(end) - level) < step / 2) end++;
+            var pen = new Pen(brush, level)
+            {
+                StartLineCap = PenLineCap.Round,
+                EndLineCap = PenLineCap.Round,
+                LineJoin = PenLineJoin.Round
+            };
+            pen.Freeze();
+            context.DrawGeometry(null, pen, SmoothRun(points, start, end));
+            start = end;
         }
+        if (opacity < 1) context.Pop();
+        return true;
+    }
 
-        var geometry = new StreamGeometry { FillRule = FillRule.Nonzero };
+    /// <summary>Weiche Linie durch die Punkte <paramref name="from"/> bis <paramref name="to"/>.</summary>
+    private static StreamGeometry SmoothRun(List<Point> points, int from, int to)
+    {
+        var geometry = new StreamGeometry();
         using (var context = geometry.Open())
         {
-            context.BeginFigure(left[0], true, true);
-            AddSmooth(context, left);
-            var endRadius = widths[^1] / 2;
-            context.ArcTo(right[^1], new Size(endRadius, endRadius), 0, false, SweepDirection.Clockwise, true, true);
-            right.Reverse();
-            AddSmooth(context, right);
-            var startRadius = widths[0] / 2;
-            context.ArcTo(left[0], new Size(startRadius, startRadius), 0, false, SweepDirection.Clockwise, true, true);
+            // Beginnt und endet auf den Mittelpunkten der Nachbarabschnitte, damit Stücke nahtlos aneinanderpassen.
+            var first = from == 0 ? points[0] : Mid(points[from - 1], points[from]);
+            context.BeginFigure(first, false, false);
+            for (var i = from; i < to; i++)
+            {
+                var mid = Mid(points[i], points[i + 1]);
+                context.QuadraticBezierTo(points[i], mid, true, true);
+            }
+            if (to == points.Count - 1) context.LineTo(points[to], true, true);
+            else context.QuadraticBezierTo(points[to], Mid(points[to], points[to + 1]), true, true);
         }
         geometry.Freeze();
-
-        // Zusätzlich die Mittellinie mit der kleinsten Breite: schließt Lücken an spitzen Kehren.
-        var group = new GeometryGroup { FillRule = FillRule.Nonzero };
-        group.Children.Add(geometry);
-        var thin = widths.Min();
-        var core = new Pen(Brushes.Black, thin) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
-        var line = new StreamGeometry();
-        using (var context = line.Open())
-        {
-            context.BeginFigure(points[0].P, false, false);
-            for (var i = 1; i < points.Count; i++) context.LineTo(points[i].P, true, true);
-        }
-        group.Children.Add(line.GetWidenedPathGeometry(core));
-        group.Freeze();
-        return group;
+        return geometry;
     }
 
-    private static void AddSmooth(StreamGeometryContext context, List<Point> points)
-    {
-        for (var i = 1; i < points.Count - 1; i++)
-        {
-            var mid = new Point((points[i].X + points[i + 1].X) / 2, (points[i].Y + points[i + 1].Y) / 2);
-            context.QuadraticBezierTo(points[i], mid, true, true);
-        }
-        context.LineTo(points[^1], true, true);
-    }
+    private static Point Mid(Point a, Point b) => new((a.X + b.X) / 2, (a.Y + b.Y) / 2);
 }
 
 /// <summary>
