@@ -26,7 +26,8 @@ targets:
         NSBonjourServices:
           - _lernheft._tcp
           - _lernheftpad._tcp
-        NSCameraUsageDescription: "Mit der Kamera liest Lernheft Stift den QR-Code am Surface, um sich zu verbinden."
+        NSCameraUsageDescription: "Mit der Kamera liest Lernheft Stift den QR-Code am Surface und scannt Seiten für deine Notizen."
+        NSPhotoLibraryUsageDescription: "Lernheft Stift fügt ausgewählte Fotos in die Notiz am Surface ein."
         UILaunchScreen: {}
         UIApplicationSupportsIndirectInputEvents: true
         UIRequiresFullScreen: false

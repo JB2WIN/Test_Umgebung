@@ -14,9 +14,16 @@ namespace Lernheft.Studio.App;
 /// </summary>
 public static class Importer
 {
-    public static async Task ImportAsync(NoteEditor editor, string path)
+    /// <summary>
+    /// Platzierung ohne Rückfrage – für Dateien vom iPad. <paramref name="Top"/> ist die Stelle
+    /// (in Seiteneinheiten), die das iPad gerade zeigt; ohne Angabe gilt der Ausschnitt am Surface.
+    /// </summary>
+    public sealed record Preset(bool NewPages, double WidthFraction, double? Top);
+
+    /// <summary>Fügt eine Datei ein. Mit <paramref name="preset"/> ohne Dialoge; dann kommt ein Fehler als Text zurück.</summary>
+    public static async Task<string?> ImportAsync(NoteEditor editor, string path, Preset? preset = null)
     {
-        if (editor.Note is not { } note) return;
+        if (editor.Note is not { } note) return "Keine Notiz offen.";
         var extension = Path.GetExtension(path).ToLowerInvariant();
         var owner = Window.GetWindow(editor);
         try
@@ -24,36 +31,51 @@ public static class Importer
             switch (extension)
             {
                 case ".pdf":
-                    await ImportPdfAsync(editor, note, path, owner);
+                    await ImportPdfAsync(editor, note, path, owner, preset);
                     break;
                 case ".svg":
                     ImportSvg(editor, note, path);
                     break;
                 case ".txt":
                 case ".md":
-                    editor.InsertText(await File.ReadAllTextAsync(path));
+                    InsertText(editor, await File.ReadAllTextAsync(path), preset);
                     break;
                 case ".rtf":
-                    editor.InsertText(RtfToText(path));
+                    InsertText(editor, RtfToText(path), preset);
                     break;
                 default:
-                    ImportImage(editor, note, path, owner);
+                    ImportImage(editor, note, path, owner, preset);
                     break;
             }
+            return null;
         }
         catch (Exception error)
         {
             editor.HideBusy();
+            if (preset is not null) return $"„{Path.GetFileName(path)}“ ließ sich nicht einfügen: {error.Message}";
             Dialogs.Info(owner, "Das hat nicht geklappt", $"„{Path.GetFileName(path)}“ ließ sich nicht einfügen.\n\n{error.Message}");
+            return error.Message;
         }
     }
 
-    private static void ImportImage(NoteEditor editor, NoteMeta note, string path, Window? owner)
+    private static void InsertText(NoteEditor editor, string text, Preset? preset)
+    {
+        if (preset is { NewPages: false, Top: double top }) editor.InsertText(text, new Point(80, top + 24));
+        else editor.InsertText(text);
+    }
+
+    private static void ImportImage(NoteEditor editor, NoteMeta note, string path, Window? owner, Preset? preset)
     {
         var source = ImageTools.Load(path) ?? throw new InvalidDataException("Diese Bilddatei kann Windows nicht lesen.");
         var shrunk = ImageTools.Shrink(source, 2600);
         var png = Path.GetExtension(path).Equals(".png", StringComparison.OrdinalIgnoreCase);
         var file = Services.Store.SaveImage(note.Id, png ? ImageTools.Png(shrunk) : ImageTools.Jpeg(shrunk, 88), png ? "png" : "jpg");
+        if (preset is not null)
+        {
+            editor.PlaceImported(new List<(string, int, int)> { (file, shrunk.PixelWidth, shrunk.PixelHeight) }, preset.NewPages,
+                preset.WidthFraction, preset.Top, select: false);
+            return;
+        }
         var placement = new ImportPlacementWindow(1, ImageTools.Load(path, 500), Path.GetFileName(path)) { Owner = owner };
         if (placement.ShowDialog() != true)
         {
@@ -63,7 +85,7 @@ public static class Importer
         editor.PlaceImported(new List<(string, int, int)> { (file, shrunk.PixelWidth, shrunk.PixelHeight) }, placement.NewPages, placement.WidthFraction);
     }
 
-    private static async Task ImportPdfAsync(NoteEditor editor, NoteMeta note, string path, Window? owner)
+    private static async Task ImportPdfAsync(NoteEditor editor, NoteMeta note, string path, Window? owner, Preset? preset)
     {
         editor.ShowBusy($"Lese {Path.GetFileName(path)} …", cancellable: false);
         var pages = new List<(string File, int Width, int Height)>();
@@ -99,6 +121,12 @@ public static class Importer
             editor.HideBusy();
         }
         if (pages.Count == 0) throw new InvalidDataException("Das PDF hat keine Seiten.");
+        if (preset is not null)
+        {
+            editor.PlaceImported(pages, preset.NewPages, preset.WidthFraction, preset.Top, select: false);
+            if (text.Length > 0) editor.InsertText(text);
+            return;
+        }
         var placement = new ImportPlacementWindow(pages.Count, preview, Path.GetFileName(path)) { Owner = owner };
         if (placement.ShowDialog() != true)
         {

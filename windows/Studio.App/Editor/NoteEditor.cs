@@ -877,7 +877,10 @@ public sealed class NoteEditor : UserControl
     }
 
     /// <summary>Legt eingefügte Seiten auf neue Seiten oder an die sichtbare Stelle.</summary>
-    public void PlaceImported(List<(string File, int PixelWidth, int PixelHeight)> images, bool newPages, double widthFraction)
+    /// <param name="top">Wo die Bilder bei „hier“ beginnen (Seiteneinheiten); ohne Angabe der Ausschnitt am Surface.</param>
+    /// <param name="select">Danach in den Bildmodus wechseln (beim Einfügen am Surface).</param>
+    public void PlaceImported(List<(string File, int PixelWidth, int PixelHeight)> images, bool newPages, double widthFraction,
+        double? top = null, bool select = true)
     {
         if (Note is null || images.Count == 0) return;
         var width = Note.Width * widthFraction;
@@ -902,12 +905,12 @@ public sealed class NoteEditor : UserControl
         }
         else
         {
-            var top = Viewport.Top + 24;
+            var y = (top ?? Viewport.Top) + 24;
             foreach (var (file, pw, ph) in images)
             {
                 var height = width * ph / Math.Max(1, pw);
-                added.Add(new PageBackground { File = file, Page = (int)(top / Paper.PageHeight), X = Math.Round((Note.Width - width) / 2), Y = Math.Round(top), Width = Math.Round(width), Height = Math.Round(height) });
-                top += height + 16;
+                added.Add(new PageBackground { File = file, Page = (int)(y / Paper.PageHeight), X = Math.Round((Note.Width - width) / 2), Y = Math.Round(y), Width = Math.Round(width), Height = Math.Round(height) });
+                y += height + 16;
             }
         }
         var needed = (int)Math.Ceiling((added.Max(b => b.Y + b.Height) + 1) / Paper.PageHeight);
@@ -918,8 +921,12 @@ public sealed class NoteEditor : UserControl
             Services.Bridge.NoteMetaChanged(this);
         }
         _page.AddImages(added);
-        _page.EnterImageMode();
-        UpdateImageBar();
+        if (select)
+        {
+            _page.EnterImageMode();
+            UpdateImageBar();
+        }
+        Services.Bridge.TextChanged(this);
         var first = added[0];
         Dispatcher.BeginInvoke(() => _scroller.ScrollToVerticalOffset(Math.Max(0, first.Y * Zoom - 40)), DispatcherPriority.Loaded);
     }

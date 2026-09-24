@@ -54,6 +54,8 @@ public static class PadProtocol
     public const string NewNote = "newNote";
     public const string Theme = "theme";
     public const string Toast = "toast";        // kurze Meldung fürs iPad
+    public const string InsertFile = "insertFile"; // Pad → Studio: PDF, Bild oder Text vom iPad einfügen
+    public const string Inserted = "inserted";     // Studio → Pad: Ergebnis dazu
 
     // Umzug der alten Notizen vom iPad
     public const string ImportBegin = "importBegin";

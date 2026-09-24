@@ -42,6 +42,8 @@ enum PadProtocol {
     static let newNote = "newNote"
     static let theme = "theme"
     static let toast = "toast"
+    static let insertFile = "insertFile"
+    static let inserted = "inserted"
 
     // Umzug der alten Notizen
     static let importBegin = "importBegin"
@@ -157,6 +159,13 @@ enum JSONWriter {
     }
 
     private static func writeString(_ text: String, into output: inout String) {
+        // Schneller Weg für lange Texte ohne Sonderzeichen (z. B. Base64 von Dateien).
+        if !text.utf8.contains(where: { $0 < 0x20 || $0 == 0x22 || $0 == 0x5C }) {
+            output += "\""
+            output += text
+            output += "\""
+            return
+        }
         output += "\""
         for scalar in text.unicodeScalars {
             switch scalar {

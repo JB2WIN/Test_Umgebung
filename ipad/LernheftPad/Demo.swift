@@ -80,6 +80,15 @@ enum Demo {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         if let folder = try? legacyFolder() { session.migration.start(folder: folder) }
                     }
+                    // Und eine Datei „vom iPad“ einfügen, wie aus der Dateien-App.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                        let page = UIGraphicsImageRenderer(size: CGSize(width: 300, height: 420)).image { context in
+                            UIColor.white.setFill()
+                            context.fill(CGRect(x: 0, y: 0, width: 300, height: 420))
+                            ("Arbeitsblatt" as NSString).draw(at: CGPoint(x: 30, y: 30), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 22)])
+                        }
+                        session.insertFiles([InsertSources.pdf(from: [page], name: "Arbeitsblatt.pdf")], placement: "pages", newNote: false)
+                    }
                 }
             }
         }

@@ -116,6 +116,9 @@ final class PadSession {
             if let text = message.string("text") { show(text) }
         case PadProtocol.importDone:
             migration.finished(message)
+        case PadProtocol.inserted:
+            busy = nil
+            show(message.string("message") ?? (message.flag("ok") ? "Eingefügt." : "Das Einfügen hat nicht geklappt."))
         default:
             break
         }
@@ -296,6 +299,33 @@ final class PadSession {
         message["image"] = image.pngData()?.base64EncodedString() ?? ""
         connection.send(message)
         show(mode == "math" ? "Die Lösung erscheint am Surface." : "Der KI-Helfer ist am Surface offen.")
+    }
+
+    /// PDFs, Fotos, Scans oder Texte vom iPad in die Notiz am Surface.
+    /// „pages“ hängt sie als neue Seiten an, „here“ setzt sie an die Stelle, die das iPad zeigt.
+    func insertFiles(_ files: [OutgoingFile], placement: String, newNote: Bool) {
+        guard connection.isConnected else {
+            show("Nicht mit dem Surface verbunden.")
+            return
+        }
+        var message = PadProtocol.message(PadProtocol.insertFile)
+        message["requestId"] = UUID().uuidString
+        if !newNote, let note { message["noteId"] = note.id }
+        message["placement"] = placement
+        message["width"] = 1.0
+        if placement == "here" { message["top"] = Double(max(0, canvas.visibleContentRect.minY)) }
+        message["files"] = files.map { file -> JSON in ["name": file.name, "data": file.data.base64EncodedString()] }
+        let megabytes = Double(files.reduce(0) { $0 + $1.data.count }) / 1_048_576
+        busy = megabytes > 2 ? String(format: "Wird ans Surface geschickt (%.1f MB) …", megabytes) : "Wird ans Surface geschickt …"
+        connection.send(message) { [weak self] ok in
+            guard let self else { return }
+            if ok {
+                if self.busy != nil { self.busy = "Das Surface fügt ein …" }
+            } else {
+                self.busy = nil
+                self.show("Die Übertragung ist abgebrochen.")
+            }
+        }
     }
 
     // MARK: - Meldungen

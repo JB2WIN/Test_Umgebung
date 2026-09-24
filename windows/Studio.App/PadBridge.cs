@@ -390,6 +390,9 @@ public sealed class PadBridge
                 case PadProtocol.ImportEnd:
                     _ = FinishImportAsync();
                     return;
+                case PadProtocol.InsertFile:
+                    _ = InsertFilesAsync(link, message);
+                    return;
             }
 
             // Alles Weitere betrifft die offene Notiz.
@@ -569,6 +572,81 @@ public sealed class PadBridge
         finally
         {
             editor.HideBusy();
+        }
+        await link.SendAsync(reply);
+    }
+
+    // MARK: - Dateien vom iPad einfügen
+
+    /// <summary>Wenn keine Notiz offen ist: neue Notiz mit diesem Titel anlegen und öffnen.</summary>
+    public event Action<string>? NewNoteForFileRequested;
+
+    private bool _inserting;
+
+    /// <summary>PDF, Fotos, Scans oder Texte vom iPad – ohne Rückfrage am Surface, an der Stelle, die das iPad zeigt.</summary>
+    private async Task InsertFilesAsync(PadLink link, JsonObject message)
+    {
+        var reply = PadProtocol.Message(PadProtocol.Inserted);
+        reply["requestId"] = message.String("requestId") ?? "";
+        var files = message["files"] as JsonArray;
+        var problems = new List<string>();
+        var count = 0;
+        var folder = Path.Combine(Path.GetTempPath(), "LernheftStudio-vom-iPad-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            if (_inserting) throw new InvalidOperationException("Gerade wird schon etwas eingefügt – einen Moment.");
+            _inserting = true;
+            if (files is null || files.Count == 0) throw new InvalidOperationException("Es kam keine Datei an.");
+            Directory.CreateDirectory(folder);
+            var saved = new List<string>();
+            foreach (var node in files.OfType<JsonObject>())
+            {
+                var name = Path.GetFileName(node.String("name") ?? "");
+                var data = node.String("data");
+                if (name.Length == 0 || data is null) continue;
+                var target = Path.Combine(folder, name);
+                for (var n = 2; File.Exists(target); n++)
+                    target = Path.Combine(folder, $"{Path.GetFileNameWithoutExtension(name)} {n}{Path.GetExtension(name)}");
+                await File.WriteAllBytesAsync(target, Convert.FromBase64String(data));
+                saved.Add(target);
+            }
+            if (saved.Count == 0) throw new InvalidOperationException("Es kam keine Datei an.");
+
+            var noteId = message.Guid("noteId");
+            if (_editor?.Note is null || (noteId is Guid wanted && _editor.Note.Id != wanted))
+            {
+                NewNoteForFileRequested?.Invoke(Path.GetFileNameWithoutExtension(saved[0]));
+            }
+            if (_editor is not { Note: not null } editor) throw new InvalidOperationException("Am Surface ließ sich keine Notiz öffnen.");
+
+            var newPages = message.String("placement") != "here";
+            var width = Math.Clamp(message.Number("width", 1), 0.3, 1);
+            double? top = message["top"] is null ? null : message.Number("top");
+            foreach (var path in saved)
+            {
+                // Bei „hier“ untereinander: jede weitere Datei unter der vorigen.
+                var preset = new Importer.Preset(newPages, width, newPages ? null : top);
+                var error = await Importer.ImportAsync(editor, path, preset);
+                if (error is null) count++;
+                else problems.Add(error);
+                if (!newPages && top is double current) top = Math.Max(current, editor.Page.ContentBottom - 24);
+            }
+            reply["ok"] = count > 0;
+            reply["message"] = count > 0
+                ? (count == 1 ? "Eingefügt." : $"{count} Dateien eingefügt.") + (problems.Count > 0 ? " " + string.Join(" ", problems) : "")
+                : string.Join(" ", problems);
+        }
+        catch (Exception error)
+        {
+            reply["ok"] = false;
+            reply["message"] = error.Message;
+        }
+        finally
+        {
+            _inserting = false;
+            try { Directory.Delete(folder, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
         await link.SendAsync(reply);
     }

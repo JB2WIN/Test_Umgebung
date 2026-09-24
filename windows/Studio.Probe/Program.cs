@@ -20,10 +20,12 @@ var strokeOk = "";
 var importFolder = Path.Combine(folder, "import");
 var importFiles = 0;
 var importResult = "";
+var insertResult = "";
 
 void Check()
 {
-    if (strokeOk.Length > 0 && importResult.Length > 0) done.TrySetResult(strokeOk + " | " + importResult);
+    if (strokeOk.Length > 0 && importResult.Length > 0 && insertResult.Length > 0)
+        done.TrySetResult(strokeOk + " | " + importResult + " | " + insertResult);
 }
 
 server.Connected += link =>
@@ -57,6 +59,22 @@ server.Connected += link =>
                 File.WriteAllBytes(target, Convert.FromBase64String(data));
                 importFiles++;
             }
+        }
+        else if (type == PadProtocol.InsertFile)
+        {
+            var files = message["files"] as JsonArray ?? new JsonArray();
+            var described = files.OfType<JsonObject>()
+                .Select(f => $"{f.String("name")} ({Convert.FromBase64String(f.String("data") ?? "").Length} Byte)").ToList();
+            var reply = PadProtocol.Message(PadProtocol.Inserted);
+            reply["requestId"] = message.String("requestId");
+            reply["ok"] = described.Count > 0;
+            reply["message"] = described.Count > 0 ? "Eingefügt." : "Keine Datei.";
+            link.Send(reply);
+            insertResult = described.Count > 0
+                ? $"Einfügen: {string.Join(", ", described)}, Platz {message.String("placement")}"
+                : "Einfügen ohne Datei";
+            if (described.Count == 0) done.TrySetResult("FEHLER " + insertResult);
+            Check();
         }
         else if (type == PadProtocol.ImportEnd)
         {

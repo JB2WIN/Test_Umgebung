@@ -19,6 +19,7 @@ struct DrawingView: View {
     @State private var showSettings = false
     @State private var showNotes = false
     @State private var alert: String?
+    @State private var insertSource: InsertFlow.Source?
 
     enum Mode { case draw, select, points }
 
@@ -67,6 +68,7 @@ struct DrawingView: View {
             FunctionSheet { settings, function in insertGraph(settings: settings, function: function) }
         }
         .sheet(isPresented: $showSettings) { SettingsView() }
+        .insertFlow(source: $insertSource)
         .sheet(isPresented: $showNotes) {
             NavigationStack {
                 NotePickerView(inline: false)
@@ -179,6 +181,13 @@ struct DrawingView: View {
 
     private var toolsMenu: some View {
         Menu {
+            Section("Einfügen") {
+                Button { insertSource = .files } label: { Label("Datei einfügen (PDF, Bild, Text) …", systemImage: "doc.badge.plus") }
+                Button { insertSource = .photos } label: { Label("Foto einfügen …", systemImage: "photo.on.rectangle") }
+                if InsertSources.scannerAvailable {
+                    Button { insertSource = .scanner } label: { Label("Seiten scannen …", systemImage: "doc.viewfinder") }
+                }
+            }
             Button { showFunction = true } label: { Label("Funktion zeichnen", systemImage: "chart.xyaxis.line") }
             Button {
                 mode = .points
@@ -495,7 +504,6 @@ struct DrawingView: View {
             VStack(spacing: 14) {
                 Text(busy).font(.callout)
                 ProgressView().progressViewStyle(.linear).frame(width: 220)
-                Text("Das Surface liest deine Handschrift.").font(.caption).foregroundStyle(.secondary)
                 Button("Abbrechen") { session.cancelBusy() }
                     .buttonStyle(.bordered)
             }
@@ -531,6 +539,7 @@ struct NotePickerView: View {
     @Environment(PadSession.self) private var session
     @Environment(\.dismiss) private var dismiss
     let inline: Bool
+    @State private var insertSource: InsertFlow.Source?
 
     var body: some View {
         ScrollView {
@@ -550,6 +559,18 @@ struct NotePickerView: View {
                             row(color: note.color, title: note.title, detail: note.subject, symbol: "doc.text") {
                                 session.open(note.id)
                                 if !inline { dismiss() }
+                            }
+                        }
+                    }
+                }
+                if inline {
+                    section("Datei vom iPad") {
+                        row(color: "#6E7A8A", title: "PDF oder Bild als neue Notiz …", detail: "Aus Dateien oder iCloud Drive", symbol: "doc.badge.plus") {
+                            insertSource = .files
+                        }
+                        if InsertSources.scannerAvailable {
+                            row(color: "#6E7A8A", title: "Seiten scannen …", detail: "Mit der Kamera – wird eine neue Notiz", symbol: "doc.viewfinder") {
+                                insertSource = .scanner
                             }
                         }
                     }
@@ -574,6 +595,7 @@ struct NotePickerView: View {
             .frame(maxWidth: .infinity)
         }
         .background(inline ? Color(uiColor: .systemGroupedBackground) : Color.clear)
+        .insertFlow(source: $insertSource, newNote: true)
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {

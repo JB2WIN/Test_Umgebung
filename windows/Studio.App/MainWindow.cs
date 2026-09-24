@@ -116,6 +116,16 @@ public sealed class MainWindow : Window
             OpenNote(id);
         };
         Services.Bridge.NewNoteRequested += id => NewNote(id);
+        Services.Bridge.NewNoteForFileRequested += title =>
+        {
+            NewNote(null);
+            if (_openNoteId is Guid created)
+            {
+                Services.Store.UpdateNote(created, n => n.Title = title);
+                _editor.Open(created);
+                ReloadNotes();
+            }
+        };
         Services.Bridge.LibraryChanged += RefreshAll;
         Services.Pad.PairingChanged += () => Dispatcher.BeginInvoke(UpdatePadCard);
         Services.Store.Changed += () =>

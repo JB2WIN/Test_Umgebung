@@ -86,6 +86,17 @@ Rückgängig/Wiederholen gibt es auf beiden Geräten.
 
 ---
 
+### Dateien vom iPad einfügen
+In Lernheft Stift unter **Werkzeuge** (Kacheln oben):
+
+- **Datei einfügen** – PDF, Bild oder Text aus der Dateien-App, auch aus iCloud Drive,
+- **Foto einfügen** – aus deinen Fotos (auch mehrere),
+- **Seiten scannen** – mit der Kamera: Blattkanten werden erkannt und begradigt, alle Seiten kommen als ein PDF.
+
+Danach fragt das iPad: **Als neue Seiten** oder **Hier auf der Seite** (an der Stelle, die du gerade siehst).
+Das Surface fügt ohne Rückfrage ein, und die Seiten erscheinen gleich auch auf dem iPad zum Beschreiben.
+Ist am Surface keine Notiz offen, geht das auch von der Notizauswahl aus – dann entsteht eine neue Notiz.
+
 ### Dateien aus iCloud Drive
 Einmal die kostenlose App **iCloud für Windows** (Microsoft Store) installieren, mit der Apple-ID
 anmelden und **iCloud Drive** anhaken. Danach zeigt Lernheft Studio deine iCloud-Dateien von selbst:
