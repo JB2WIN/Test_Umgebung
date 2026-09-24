@@ -1,0 +1,102 @@
+name: Release
+
+# Ein Tag wie „v1.0.0“ baut Lernheft Studio (MSI) und Lernheft Pad (IPA) frisch
+# und legt beide als GitHub-Release ab.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Tests
+        run: dotnet test windows/Studio.Tests -c Release
+
+      - name: App veröffentlichen
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          dotnet publish windows/Studio.App/Studio.App.csproj -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=none -p:Version=$version -o windows/dist/app
+
+      - name: Installer bauen
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          dotnet tool install --global wix --version 5.0.2
+          wix build installer/Studio.wxs -arch x64 -d Version=$version -d PublishDir=windows\dist\app -d IconFile=windows\Studio.App\app.ico -o windows\dist\LernheftStudio.msi
+          Get-Item windows\dist\LernheftStudio.msi | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: msi
+          path: windows/dist/LernheftStudio.msi
+
+  ipad:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ipad
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+
+      - name: Xcode-Projekt erzeugen
+        run: xcodegen generate
+
+      - name: App bauen (unsigniert)
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          xcodebuild -project LernheftPad.xcodeproj -scheme LernheftPad -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build/device \
+            MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build > build.log 2>&1 || { grep -E "error:" build.log | sort -u; tail -n 60 build.log; exit 1; }
+
+      - name: IPA packen
+        run: |
+          mkdir -p Payload
+          cp -R build/device/Build/Products/Release-iphoneos/LernheftPad.app Payload/
+          zip -qr LernheftPad.ipa Payload
+          ls -la LernheftPad.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: ipad/LernheftPad.ipa
+
+  release:
+    needs: [windows, ipad]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Release anlegen
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Lernheft Studio & Lernheft Pad ${{ github.ref_name }}
+          body_path: .github/release-notes.md
+          files: |
+            dist/LernheftStudio.msi
+            dist/LernheftPad.ipa
