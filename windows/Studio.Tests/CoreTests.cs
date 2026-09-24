@@ -346,7 +346,7 @@ public class LegacyImportTests
     {
         using var temp = new TempFolder();
         var folder = MakeOldFolder(temp, out var noteId, out _);
-        // So schickt Lernheft Pad die aus PencilKit übersetzte Handschrift: Kennung und Breitenfaktoren.
+        // So schickt Lernheft Stift die aus PencilKit übersetzte Handschrift: Kennung und Breitenfaktoren.
         File.WriteAllText(Path.Combine(folder, "notes", noteId.ToString().ToUpperInvariant(), "strokes.json"),
             """{"v":2,"device":"iPad","strokes":[{"i":"a1b2c3","c":"#2140C8","w":3.1,"k":"pencil","wf":true,"p":[10,20,0.8,30,40,1.2]}]}""");
         var store = new LibraryStore(Path.Combine(temp.Path, "neu"));

@@ -9,7 +9,7 @@ using QRCoder;
 namespace Lernheft.Studio.App.Sheets;
 
 /// <summary>
-/// iPad koppeln: QR-Code mit der Kamera von Lernheft Pad scannen – oder den sechsstelligen Code
+/// iPad koppeln: QR-Code mit der Kamera von Lernheft Stift scannen – oder den sechsstelligen Code
 /// abtippen. Danach verbindet sich das iPad von allein wieder, sobald beide im selben WLAN sind.
 /// </summary>
 public sealed class PairingWindow : SheetWindow
@@ -50,7 +50,7 @@ public sealed class PairingWindow : SheetWindow
         left.Children.Add(_expires);
 
         var steps = new StackPanel { Margin = new Thickness(28, 0, 0, 0) };
-        steps.Children.Add(Step("1", "Öffne auf dem iPad „Lernheft Pad“."));
+        steps.Children.Add(Step("1", "Öffne auf dem iPad „Lernheft Stift“."));
         steps.Children.Add(Step("2", "Halte die Kamera auf den QR-Code – oder wähle „Code eingeben“ und tippe die sechs Ziffern ab."));
         steps.Children.Add(Step("3", "Fertig. Was du auf dem iPad zeichnest, erscheint sofort in der Notiz, die hier offen ist."));
         steps.Children.Add(Ui.Hint("Beide Geräte müssen im selben WLAN sein. Später verbindet sich das iPad von allein, "

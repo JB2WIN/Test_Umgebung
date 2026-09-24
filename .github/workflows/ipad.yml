@@ -1,4 +1,4 @@
-name: Lernheft Pad (iPad)
+name: Lernheft Stift (iPad)
 
 on:
   push:
@@ -48,13 +48,13 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/device/Build/Products/Release-iphoneos/LernheftPad.app Payload/
-          zip -qr LernheftPad.ipa Payload
-          ls -la LernheftPad.ipa
+          zip -qr LernheftStift.ipa Payload
+          ls -la LernheftStift.ipa
 
       - uses: actions/upload-artifact@v4
         with:
-          name: LernheftPad-ipa
-          path: ipad/LernheftPad.ipa
+          name: LernheftStift-ipa
+          path: ipad/LernheftStift.ipa
 
       - name: Bildschirmfotos im Simulator
         timeout-minutes: 25
@@ -76,12 +76,12 @@ jobs:
           echo "Warte auf den Simulator …"
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" build/sim/Build/Products/Debug-iphonesimulator/LernheftPad.app
-          xcrun simctl privacy "$UDID" grant camera de.lernheft.pad || true
+          xcrun simctl privacy "$UDID" grant camera de.lernheft.stift || true
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
           mkdir -p ../shots/ipad
           shoot() {
-            xcrun simctl terminate "$UDID" de.lernheft.pad 2>/dev/null || true
-            xcrun simctl launch "$UDID" de.lernheft.pad -demo "$1"
+            xcrun simctl terminate "$UDID" de.lernheft.stift 2>/dev/null || true
+            xcrun simctl launch "$UDID" de.lernheft.stift -demo "$1"
             sleep 7
             xcrun simctl io "$UDID" screenshot "../shots/ipad/$2.png"
             echo "Foto: $2"
@@ -109,8 +109,8 @@ jobs:
           for i in $(seq 1 60); do [ -f probe/payload.txt ] && break; sleep 1; done
           cat probe/payload.txt
           xcrun simctl ui "$UDID" appearance light
-          xcrun simctl terminate "$UDID" de.lernheft.pad 2>/dev/null || true
-          xcrun simctl launch "$UDID" de.lernheft.pad -demo e2e -pair "$(cat probe/payload.txt)"
+          xcrun simctl terminate "$UDID" de.lernheft.stift 2>/dev/null || true
+          xcrun simctl launch "$UDID" de.lernheft.stift -demo e2e -pair "$(cat probe/payload.txt)"
           for i in $(seq 1 150); do [ -f probe/result.txt ] && break; sleep 2; done
           sleep 1
           mkdir -p shots/ipad

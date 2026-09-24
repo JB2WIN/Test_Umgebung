@@ -18,15 +18,15 @@ targets:
     info:
       path: LernheftPad/Info.plist
       properties:
-        CFBundleDisplayName: Lernheft Pad
+        CFBundleDisplayName: Lernheft Stift
         # Die Verbindung zum Surface läuft im eigenen WLAN ohne HTTPS.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
-        NSLocalNetworkUsageDescription: "Lernheft Pad verbindet sich im WLAN mit Lernheft Studio auf deinem Surface, damit deine Handschrift sofort dort erscheint."
+        NSLocalNetworkUsageDescription: "Lernheft Stift verbindet sich im WLAN mit Lernheft Studio auf deinem Surface, damit deine Handschrift sofort dort erscheint."
         NSBonjourServices:
           - _lernheft._tcp
           - _lernheftpad._tcp
-        NSCameraUsageDescription: "Mit der Kamera liest Lernheft Pad den QR-Code am Surface, um sich zu verbinden."
+        NSCameraUsageDescription: "Mit der Kamera liest Lernheft Stift den QR-Code am Surface, um sich zu verbinden."
         UILaunchScreen: {}
         UIApplicationSupportsIndirectInputEvents: true
         UIRequiresFullScreen: false
@@ -39,7 +39,7 @@ targets:
           UIApplicationSupportsMultipleScenes: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: de.lernheft.pad
+        PRODUCT_BUNDLE_IDENTIFIER: de.lernheft.stift
         TARGETED_DEVICE_FAMILY: "2"
         GENERATE_INFOPLIST_FILE: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

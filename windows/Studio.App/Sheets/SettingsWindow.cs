@@ -376,7 +376,7 @@ public sealed class SettingsWindow : StudioWindow
 
     private void BuildPad()
     {
-        var group = Group("Lernheft Pad", "Das iPad dient nur zum Zeichnen. Notizen, Einstellungen und KI liegen hier auf dem Surface.");
+        var group = Group("Lernheft Stift", "Das iPad dient nur zum Zeichnen. Notizen, Einstellungen und KI liegen hier auf dem Surface.");
         var connected = Services.Bridge.Connected;
         group.Children.Add(Ui.Text(connected ? $"Verbunden mit {Services.Bridge.DeviceName}." : "Gerade ist kein iPad verbunden.",
             14, FontWeights.SemiBold, connected ? "Good" : "Muted"));

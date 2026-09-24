@@ -1,11 +1,11 @@
-# Lernheft Studio + Lernheft Pad
+# Lernheft Studio + Lernheft Stift
 
 Eine App fürs Surface, die alles kann – und ein iPad, das bei Bedarf zum Zeichentablett wird.
 
 | Gerät | App | Aufgabe |
 |---|---|---|
 | **Surface** (Windows 11) | **Lernheft Studio** | Notizen, Fächer, Hausaufgaben, Karteikarten, Stundenplan, KI, Einstellungen – alles |
-| **iPad** | **Lernheft Pad** | nur Zeichnen: Was du mit dem Pencil schreibst, erscheint sofort in der offenen Notiz am Surface |
+| **iPad** | **Lernheft Stift** | nur Zeichnen: Was du mit dem Pencil schreibst, erscheint sofort in der offenen Notiz am Surface |
 
 Beide sind **neue Apps** – die alte Lernheft-App bleibt unangetastet, bis du sie selbst löschst.
 
@@ -21,12 +21,12 @@ Beide sind **neue Apps** – die alte Lernheft-App bleibt unangetastet, bis du s
    das Surface dann das iPad von sich aus anruft.
 
 ### iPad
-`LernheftPad.ipa` wie gewohnt mit **Sideloadly** aufspielen. Beim ersten Verbinden fragt iOS, ob
-Lernheft Pad im **lokalen Netzwerk** suchen darf → **Erlauben**. Für den QR-Code braucht die App
+`LernheftStift.ipa` wie gewohnt mit **Sideloadly** aufspielen. Beim ersten Verbinden fragt iOS, ob
+Lernheft Stift im **lokalen Netzwerk** suchen darf → **Erlauben**. Für den QR-Code braucht die App
 die **Kamera**.
 
 Die Dateien kommen aus GitHub → **Actions**: „Lernheft Studio (Windows)“ → Artefakt
-`LernheftStudio-Installer`, „Lernheft Pad (iPad)“ → Artefakt `LernheftPad-ipa`.
+`LernheftStudio-Installer`, „Lernheft Stift (iPad)“ → Artefakt `LernheftStift-ipa`.
 
 ---
 
@@ -34,7 +34,7 @@ Die Dateien kommen aus GitHub → **Actions**: „Lernheft Studio (Windows)“ �
 
 1. Am Surface: **iPad verbinden** (links unten, auf der Übersicht oder oben in jeder Notiz).
 2. Ein QR-Code und ein sechsstelliger Code erscheinen (10 Minuten gültig).
-3. Auf dem iPad in Lernheft Pad: **QR-Code scannen** – oder **Code eingeben**.
+3. Auf dem iPad in Lernheft Stift: **QR-Code scannen** – oder **Code eingeben**.
 4. Fertig. Ab jetzt verbindet sich das iPad **von allein**, sobald beide Apps offen und im
    selben WLAN sind. Ein neuer Code ist nicht nötig.
 
@@ -42,7 +42,7 @@ Die Dateien kommen aus GitHub → **Actions**: „Lernheft Studio (Windows)“ �
 - Beide Geräte müssen im **selben WLAN** sein.
 - Im **Schul-WLAN** sehen sich Geräte oft nicht. Dann am Surface den **mobilen Hotspot**
   einschalten (Einstellungen → Netzwerk und Internet → Mobiler Hotspot) und das iPad damit verbinden.
-- iPad → Einstellungen → Datenschutz → **Lokales Netzwerk** → Lernheft Pad einschalten.
+- iPad → Einstellungen → Datenschutz → **Lokales Netzwerk** → Lernheft Stift einschalten.
 - Am Surface im Kopplungsfenster: **Firewall-Freigabe einrichten**.
 
 ---
@@ -93,7 +93,7 @@ beim ersten Start annehmen). Vier Wege:
 
 1. **Von diesem Surface** – was die alte Windows-App gespeichert hat. Ein Klick.
 2. **Vom iPad** (empfohlen, dort liegen die Originale der Handschrift):
-   iPad verbinden → in Lernheft Pad **Einstellungen → Alte Notizen übertragen → Ordner wählen**
+   iPad verbinden → in Lernheft Stift **Einstellungen → Alte Notizen übertragen → Ordner wählen**
    → **Auf meinem iPad → Lernheft**. Die Handschrift wird dabei ins neue Format übersetzt.
 3. **Vom alten Lernheft-Server** – Adresse und Zugangsschlüssel wie früher.
 4. **Aus einem Ordner oder einer Sicherung** der alten App.

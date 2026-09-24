@@ -71,9 +71,9 @@ public sealed class LegacyImportWindow : SheetWindow
     {
         var panel = new StackPanel();
         panel.Children.Add(Ui.CardHeader("Vom iPad (empfohlen für Handschrift)", Ui.GlyphTablet));
-        panel.Children.Add(Ui.Text("Auf dem iPad liegen die Originale deiner Handschrift. Lernheft Pad liest sie aus der alten App und schickt alles hierher:",
+        panel.Children.Add(Ui.Text("Auf dem iPad liegen die Originale deiner Handschrift. Lernheft Stift liest sie aus der alten App und schickt alles hierher:",
             13.5, color: "Muted", wrap: true, margin: new Thickness(0, 0, 0, 8)));
-        panel.Children.Add(Ui.Text("1.  iPad mit diesem Surface verbinden.\n2.  In Lernheft Pad: Einstellungen → „Alte Notizen übertragen“.\n" +
+        panel.Children.Add(Ui.Text("1.  iPad mit diesem Surface verbinden.\n2.  In Lernheft Stift: Einstellungen → „Alte Notizen übertragen“.\n" +
                                    "3.  Den Ordner „Lernheft“ auswählen (Auf meinem iPad → Lernheft) – fertig.", 13.5, wrap: true,
             margin: new Thickness(0, 0, 0, 12)));
         var connected = Services.Bridge.Connected;

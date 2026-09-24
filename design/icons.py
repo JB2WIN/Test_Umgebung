@@ -1,4 +1,4 @@
-# Erzeugt die App-Symbole für Lernheft Studio (Surface) und Lernheft Pad (iPad).
+# Erzeugt die App-Symbole für Lernheft Studio (Surface) und Lernheft Stift (iPad).
 from PIL import Image, ImageDraw, ImageFilter
 import math
 

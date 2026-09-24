@@ -24,7 +24,7 @@ public class InkStroke
 
     /// <summary>
     /// Punkte als x, y und ein dritter Wert hintereinander. Bei alten Strichen ist das der Druck
-    /// (0–1), bei Strichen von Lernheft Pad die Breite im Verhältnis zu <see cref="Width"/>.
+    /// (0–1), bei Strichen von Lernheft Stift die Breite im Verhältnis zu <see cref="Width"/>.
     /// </summary>
     [JsonPropertyName("p")] public List<double> Points { get; set; } = new();
 

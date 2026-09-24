@@ -47,7 +47,7 @@ final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsD
     }
 
     private func denied() {
-        message.text = "Lernheft Pad darf die Kamera nicht benutzen.\nErlaube es in den Einstellungen – oder tippe den Code ab."
+        message.text = "Lernheft Stift darf die Kamera nicht benutzen.\nErlaube es in den Einstellungen – oder tippe den Code ab."
         message.isHidden = false
     }
 

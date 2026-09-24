@@ -1,6 +1,6 @@
 name: Release
 
-# Eine neue Versionsnummer in RELEASE_VERSION baut Lernheft Studio (MSI) und Lernheft Pad (IPA)
+# Eine neue Versionsnummer in RELEASE_VERSION baut Lernheft Studio (MSI) und Lernheft Stift (IPA)
 # frisch, setzt den Tag „v<Version>“ und legt beide als GitHub-Release ab.
 on:
   push:
@@ -74,13 +74,13 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/device/Build/Products/Release-iphoneos/LernheftPad.app Payload/
-          zip -qr LernheftPad.ipa Payload
-          ls -la LernheftPad.ipa
+          zip -qr LernheftStift.ipa Payload
+          ls -la LernheftStift.ipa
 
       - uses: actions/upload-artifact@v4
         with:
           name: ipa
-          path: ipad/LernheftPad.ipa
+          path: ipad/LernheftStift.ipa
 
   release:
     needs: [windows, ipad]
@@ -102,8 +102,8 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.value }}
           target_commitish: ${{ github.sha }}
-          name: Lernheft Studio & Lernheft Pad ${{ steps.version.outputs.value }}
+          name: Lernheft Studio & Lernheft Stift ${{ steps.version.outputs.value }}
           body_path: .github/release-notes.md
           files: |
             dist/LernheftStudio.msi
-            dist/LernheftPad.ipa
+            dist/LernheftStift.ipa

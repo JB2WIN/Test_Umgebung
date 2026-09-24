@@ -17,7 +17,7 @@ final class Link {
     var onClosed: (() -> Void)?
     private(set) var lastHeard = Date()
     private(set) var isClosed = false
-    private let queue = DispatchQueue(label: "de.lernheft.pad.link", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "de.lernheft.stift.link", qos: .userInitiated)
 
     init(connection: NWConnection, address: String, incoming: Bool) {
         self.connection = connection
@@ -157,7 +157,7 @@ struct SavedPairing: Codable, Equatable {
 }
 
 enum Keychain {
-    private static let service = "de.lernheft.pad"
+    private static let service = "de.lernheft.stift"
 
     static func read(_ account: String) -> String? {
         let query: [String: Any] = [
@@ -263,7 +263,7 @@ final class PadConnection {
         stopSearch()
         if let link {
             var bye = PadProtocol.message(PadProtocol.bye)
-            bye["reason"] = "Lernheft Pad ist im Hintergrund."
+            bye["reason"] = "Lernheft Stift ist im Hintergrund."
             link.send(bye)
             link.close()
         }

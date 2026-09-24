@@ -1,6 +1,6 @@
 import Foundation
 
-/// Die Sprache zwischen Lernheft Pad (iPad) und Lernheft Studio (Surface).
+/// Die Sprache zwischen Lernheft Stift (iPad) und Lernheft Studio (Surface).
 /// Jede Nachricht ist ein JSON-Objekt mit dem Feld „t“ für die Art. Dieselben Namen stehen
 /// in Lernheft Studio (PadProtocol.cs).
 enum PadProtocol {

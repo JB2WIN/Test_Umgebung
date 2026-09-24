@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 namespace Lernheft.Studio;
 
 /// <summary>
-/// Die Sprache zwischen Lernheft Studio (Surface) und Lernheft Pad (iPad).
+/// Die Sprache zwischen Lernheft Studio (Surface) und Lernheft Stift (iPad).
 ///
 /// Jede Nachricht ist ein JSON-Objekt mit dem Feld „t" für die Art. Die Verbindung ist ein
 /// WebSocket im eigenen WLAN. Dieselben Namen stehen in der iPad-App (PadProtocol.swift).

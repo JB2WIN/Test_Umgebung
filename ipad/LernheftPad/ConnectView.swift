@@ -73,7 +73,7 @@ struct ConnectView: View {
                     .font(.system(size: 38, weight: .semibold))
                     .foregroundStyle(.white)
             }
-            Text("Lernheft Pad")
+            Text("Lernheft Stift")
                 .font(.largeTitle.weight(.bold))
             Text("Dein iPad als Zeichentablett für Lernheft Studio. Was du hier schreibst, erscheint sofort auf dem Surface.")
                 .font(.body)
@@ -243,7 +243,7 @@ struct ConnectView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(connection.serverName.isEmpty ? "Suche das Surface …" : "Verbinde mit \(connection.serverName) …")
                         .font(.title3.weight(.semibold))
-                    Text("Das dauert meist nur ein paar Sekunden. Beim ersten Mal fragt iOS, ob Lernheft Pad im lokalen Netzwerk suchen darf – bitte erlauben.")
+                    Text("Das dauert meist nur ein paar Sekunden. Beim ersten Mal fragt iOS, ob Lernheft Stift im lokalen Netzwerk suchen darf – bitte erlauben.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -277,7 +277,7 @@ struct ConnectView: View {
             VStack(alignment: .leading, spacing: 10) {
                 tip("wifi", "iPad und Surface müssen im selben WLAN sein.")
                 tip("personalhotspot", "Im Schul-WLAN sehen sich Geräte oft nicht. Dann am Surface einen mobilen Hotspot einschalten (Einstellungen → Netzwerk → Mobiler Hotspot) und das iPad damit verbinden.")
-                tip("lock.shield", "iPad-Einstellungen → Datenschutz → Lokales Netzwerk: Lernheft Pad muss eingeschaltet sein.")
+                tip("lock.shield", "iPad-Einstellungen → Datenschutz → Lokales Netzwerk: Lernheft Stift muss eingeschaltet sein.")
                 tip("shield.lefthalf.filled", "Fragt Windows nach der Firewall, dort „Zulassen“ wählen. Ohne Freigabe ruft das Surface das iPad selbst an – das klappt meistens trotzdem.")
             }
             .padding(.top, 10)

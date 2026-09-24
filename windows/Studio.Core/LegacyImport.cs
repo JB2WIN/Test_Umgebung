@@ -34,7 +34,7 @@ public static class LegacyImport
                 if (MissingInk > 0)
                 {
                     text += $" Bei {MissingInk} Notizen fehlte die Handschrift im gemeinsamen Format – "
-                            + "übertrage sie am besten direkt vom iPad (Lernheft Pad → Einstellungen → Alte Notizen übertragen).";
+                            + "übertrage sie am besten direkt vom iPad (Lernheft Stift → Einstellungen → Alte Notizen übertragen).";
                 }
                 return text;
             }

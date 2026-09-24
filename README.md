@@ -1,8 +1,8 @@
-# Lernheft Studio & Lernheft Pad
+# Lernheft Studio & Lernheft Stift
 
 **Lernheft Studio** ist die Hauptapp fürs Surface (Windows 11, WPF/.NET 10): Notizen mit
 Textfeldern wie in OneNote, Fächer, Hausaufgaben, Karteikarten, Stundenplan, KI-Helfer und alle
-Einstellungen. **Lernheft Pad** macht das iPad bei Bedarf zum Zeichentablett (SwiftUI/PencilKit):
+Einstellungen. **Lernheft Stift** macht das iPad bei Bedarf zum Zeichentablett (SwiftUI/PencilKit):
 Kopplung per QR-Code oder Code, Striche erscheinen live in der offenen Notiz am Surface.
 
 Bedienung und Einrichtung: [ANLEITUNG.md](ANLEITUNG.md)
@@ -14,9 +14,9 @@ Bedienung und Einrichtung: [ANLEITUNG.md](ANLEITUNG.md)
 | `windows/Studio.Core` | Datenmodell, Speicher, Umzug alter Notizen, KI (Gemini), Stundenplan, Verbindung zum iPad (WebSocket-Server) |
 | `windows/Studio.App` | die WPF-App (Editor, Fenster, Import/Export, Screenshot-Prüfung mit `--shots <Ordner>`) |
 | `windows/Studio.Tests` | Tests für den Kern (`dotnet test windows/Studio.Tests`) |
-| `windows/Studio.Probe` | Test-Surface ohne Oberfläche: prüft in der CI die echte Verbindung mit Lernheft Pad im Simulator (Kopplung, Strich, Umzug) |
+| `windows/Studio.Probe` | Test-Surface ohne Oberfläche: prüft in der CI die echte Verbindung mit Lernheft Stift im Simulator (Kopplung, Strich, Umzug) |
 | `installer/Studio.wxs` | MSI-Paket (WiX 5, pro Benutzer) |
-| `ipad` | Lernheft Pad (XcodeGen: `cd ipad && xcodegen generate`) |
+| `ipad` | Lernheft Stift (XcodeGen: `cd ipad && xcodegen generate`) |
 | `design` | App-Symbole |
 
 ## Bauen

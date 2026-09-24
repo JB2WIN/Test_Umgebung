@@ -3,7 +3,7 @@ import PencilKit
 import UIKit
 
 /// Ein Strich im gemeinsamen Format von iPad und Surface.
-/// Punkte liegen als x, y und ein dritter Wert hintereinander. Bei Strichen von Lernheft Pad ist
+/// Punkte liegen als x, y und ein dritter Wert hintereinander. Bei Strichen von Lernheft Stift ist
 /// der dritte Wert die Breite im Verhältnis zu `width` („wf“), bei alten Strichen der Druck (0–1).
 struct PortableStroke {
     var id: String

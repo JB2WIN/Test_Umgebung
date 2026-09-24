@@ -65,7 +65,7 @@ struct SettingsView: View {
 
                 Section("Über") {
                     LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")
-                    Text("Lernheft Pad ist das Zeichentablett für Lernheft Studio. Notizen, Fächer, Hausaufgaben und KI verwaltest du am Surface.")
+                    Text("Lernheft Stift ist das Zeichentablett für Lernheft Studio. Notizen, Fächer, Hausaufgaben und KI verwaltest du am Surface.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
