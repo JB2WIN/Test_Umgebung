@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "ipad/**"
+      - "windows/Studio.Core/**"
+      - "windows/Studio.Probe/**"
       - ".github/workflows/ipad.yml"
   workflow_dispatch:
 
@@ -20,8 +22,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
       - name: XcodeGen installieren
         run: brew install xcodegen
+
+      - name: Test-Surface bauen
+        working-directory: .
+        run: dotnet build windows/Studio.Probe -c Release -o probe-bin
 
       - name: Xcode-Projekt erzeugen
         run: xcodegen generate
@@ -56,6 +66,7 @@ jobs:
           pads.sort(key=lambda d: (0 if 'Air 11' in d['name'] else 1 if 'Pro 11' in d['name'] else 2, d['name']))
           print(pads[0]['udid'])")
           echo "Simulator: $UDID"
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
           xcrun simctl boot "$UDID" || true
           echo "::group::Build für den Simulator"
           xcodebuild -project LernheftPad.xcodeproj -scheme LernheftPad -configuration Debug \
@@ -88,6 +99,26 @@ jobs:
           shoot draw 13-draw-dark
           shoot select 14-select-dark
           ls -la ../shots/ipad
+
+      - name: Verbindungstest mit Test-Surface
+        timeout-minutes: 12
+        working-directory: .
+        run: |
+          mkdir -p probe
+          dotnet probe-bin/StudioProbe.dll probe > probe/console.log 2>&1 &
+          for i in $(seq 1 60); do [ -f probe/payload.txt ] && break; sleep 1; done
+          cat probe/payload.txt
+          xcrun simctl ui "$UDID" appearance light
+          xcrun simctl terminate "$UDID" de.lernheft.pad 2>/dev/null || true
+          xcrun simctl launch "$UDID" de.lernheft.pad -demo e2e -pair "$(cat probe/payload.txt)"
+          for i in $(seq 1 150); do [ -f probe/result.txt ] && break; sleep 2; done
+          sleep 1
+          mkdir -p shots/ipad
+          xcrun simctl io "$UDID" screenshot shots/ipad/08-e2e.png
+          cp probe/messages.log shots/ipad/e2e-messages.log 2>/dev/null || true
+          cat probe/messages.log || true
+          cat probe/result.txt || echo "kein Ergebnis"
+          grep -q '^OK' probe/result.txt
 
       - name: Build-Log hochladen
         if: always()

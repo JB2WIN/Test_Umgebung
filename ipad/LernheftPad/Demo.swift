@@ -8,6 +8,10 @@ enum Demo {
 
     static func start(_ session: PadSession, screen: String) {
         guard screen != "connect" else { return }
+        if screen == "e2e" {
+            endToEnd(session)
+            return
+        }
         session.connection.startDemo(name: "Surface von Jonas")
         if screen == "picker" {
             session.receive([
@@ -46,6 +50,36 @@ enum Demo {
             session.receive(["t": PadProtocol.text, "noteId": noteId, "page": 0, "scale": 3, "data": text.base64EncodedString()])
         }
         session.receive(["t": PadProtocol.view, "noteId": noteId, "top": 0, "height": 700])
+    }
+
+    /// Echter Verbindungstest in der CI: koppelt mit dem Test-Surface aus dem QR-Inhalt und
+    /// zeichnet einen Strich, sobald die Notiz da ist.
+    private static func endToEnd(_ session: PadSession) {
+        guard let text = UserDefaults.standard.string(forKey: "pair"), let offer = PairingOffer(text) else {
+            session.show("Kein QR-Inhalt übergeben.")
+            return
+        }
+        session.connection.pair(with: offer)
+        func waitForNote(_ attempt: Int) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                guard attempt < 120 else { return }
+                guard session.connection.isConnected, session.note != nil, session.canvas.canvas != nil else {
+                    waitForNote(attempt + 1)
+                    return
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    var points: [CGPoint] = []
+                    for index in 0...60 {
+                        let t = CGFloat(index) / 60
+                        points.append(CGPoint(x: 100 + t * 420, y: 360 + sin(t * 9) * 28))
+                    }
+                    if let stroke = InkBridge.line(points: points, width: 3, color: UIColor(hex: "#2D4BE0")) {
+                        session.canvas.addStrokes([stroke])
+                    }
+                }
+            }
+        }
+        waitForNote(0)
     }
 
     /// Messbild: wie breit zeichnet PencilKit Striche bei welcher Punktgröße und welchem Druck?

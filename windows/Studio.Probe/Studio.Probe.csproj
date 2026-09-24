@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ein Test-Surface ohne Oberfläche: prüft in der CI die echte Verbindung mit Lernheft Pad im Simulator. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>StudioProbe</AssemblyName>
+    <RootNamespace>Lernheft.Studio.Probe</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Studio.Core\Studio.Core.csproj" />
+  </ItemGroup>
+
+</Project>
