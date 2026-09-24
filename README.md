@@ -14,6 +14,7 @@ Bedienung und Einrichtung: [ANLEITUNG.md](ANLEITUNG.md)
 | `windows/Studio.Core` | Datenmodell, Speicher, Umzug alter Notizen, KI (Gemini), Stundenplan, Verbindung zum iPad (WebSocket-Server) |
 | `windows/Studio.App` | die WPF-App (Editor, Fenster, Import/Export, Screenshot-Prüfung mit `--shots <Ordner>`) |
 | `windows/Studio.Tests` | Tests für den Kern (`dotnet test windows/Studio.Tests`) |
+| `windows/Studio.Probe` | Test-Surface ohne Oberfläche: prüft in der CI die echte Verbindung mit Lernheft Pad im Simulator (Kopplung, Strich, Umzug) |
 | `installer/Studio.wxs` | MSI-Paket (WiX 5, pro Benutzer) |
 | `ipad` | Lernheft Pad (XcodeGen: `cd ipad && xcodegen generate`) |
 | `design` | App-Symbole |
