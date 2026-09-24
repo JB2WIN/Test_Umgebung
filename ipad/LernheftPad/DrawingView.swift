@@ -219,7 +219,7 @@ struct DrawingView: View {
     // MARK: - Auswahl
 
     private var selectionBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        BarScroll {
             HStack(spacing: 8) {
                 if selection == nil {
                     Label("Zieh einen Rahmen um deine Handschrift", systemImage: "hand.draw")
@@ -239,15 +239,10 @@ struct DrawingView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
-        .safeAreaInset(edge: .trailing, spacing: 0) {
-            Button("Fertig") {
-                mode = .draw
-                selection = nil
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.horizontal, 12)
-        }
-        .background(.bar)
+        .modifier(TrailingDone(prominent: true) {
+            mode = .draw
+            selection = nil
+        })
     }
 
     private func action(_ title: String, _ symbol: String, role: ButtonRole? = nil, perform: @escaping () -> Void) -> some View {
@@ -345,7 +340,7 @@ struct DrawingView: View {
     // MARK: - Punkte verbinden
 
     private var pointBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        BarScroll {
             HStack(spacing: 10) {
                 if points.isEmpty {
                     Label("Punkte antippen – nochmal tippen entfernt sie", systemImage: "hand.tap")
@@ -387,15 +382,10 @@ struct DrawingView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
-        .safeAreaInset(edge: .trailing, spacing: 0) {
-            Button("Fertig") {
-                mode = .draw
-                points = []
-            }
-            .buttonStyle(.bordered)
-            .padding(.horizontal, 12)
-        }
-        .background(.bar)
+        .modifier(TrailingDone(prominent: false) {
+            mode = .draw
+            points = []
+        })
     }
 
     private var pointOverlay: some View {
@@ -615,5 +605,36 @@ struct NotePickerView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Waagrecht scrollende Leiste – bleibt links vom festen „Fertig“-Knopf.
+struct BarScroll<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) { content }
+    }
+}
+
+/// Setzt „Fertig“ fest an den rechten Rand der Leiste, neben den scrollbaren Teil.
+struct TrailingDone: ViewModifier {
+    let prominent: Bool
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        HStack(spacing: 0) {
+            content
+            Divider().frame(height: 28)
+            Group {
+                if prominent {
+                    Button("Fertig", action: action).buttonStyle(.borderedProminent)
+                } else {
+                    Button("Fertig", action: action).buttonStyle(.bordered)
+                }
+            }
+            .padding(.horizontal, 12)
+        }
+        .background(.bar)
     }
 }
