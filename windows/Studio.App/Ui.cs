@@ -62,6 +62,7 @@ public static class Ui
     public const string GlyphLink = "";
     public const string GlyphMail = "";
     public const string GlyphErase = "";
+    public const string GlyphCloud = "\uE753";
     public const string GlyphRefresh = "";
     public const string GlyphClear = "";
 

@@ -97,18 +97,19 @@ public static class Harness
             await Sheet(main, new AiWindow(new AiContext("Quadratische Funktionen", "f(x) = x² − 2x − 3", new List<GeminiImage>(), false),
                 AiWindow.Tab.Math, autoRun: false), "26-ai" + suffix);
             await Sheet(main, new NotebookDialog(null), "27-notebook" + suffix);
+            await Sheet(main, new CloudFilesWindow("„Quadratische Funktionen“"), "28-icloud" + suffix, 1500);
         }
         Services.Pad.StopPairing();
         main.Close();
     }
 
-    private static async Task Sheet(Window owner, Window sheet, string name)
+    private static async Task Sheet(Window owner, Window sheet, string name, int wait = 500)
     {
         try
         {
             sheet.Owner = owner;
             sheet.Show();
-            await Settle(500);
+            await Settle(wait);
             Save(sheet, name);
             sheet.Close();
             await Settle(150);
@@ -252,6 +253,22 @@ public static class Demo
         }
         store.ReplaceLessons(lessons);
         store.Save();
+
+        // Ein nachgebautes iCloud Drive mit ein paar Schulsachen.
+        var cloud = Path.Combine(store.Root, "iCloudDrive-Beispiel");
+        foreach (var (folder, file, days) in new[]
+                 {
+                     ("Schule/Mathe", "Arbeitsblatt Parabeln.pdf", 0), ("Schule/Bio", "Zellaufbau.png", 1),
+                     ("Schule/Deutsch", "Gedicht Analyse.txt", 3), ("", "Stundenplan.jpg", 6), ("Fotos", "Tafelbild.heic", 9)
+                 })
+        {
+            var directory = Path.Combine(cloud, folder);
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, file);
+            File.WriteAllText(path, "Beispiel");
+            File.SetLastWriteTime(path, DateTime.Now.AddDays(-days).AddHours(-2));
+        }
+        Services.Settings.Set(Keys.ICloudFolder, cloud);
     }
 
     private static InkStroke Scribble(double x, double y, double width, string color)

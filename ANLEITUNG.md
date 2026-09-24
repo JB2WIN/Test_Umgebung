@@ -86,6 +86,18 @@ Rückgängig/Wiederholen gibt es auf beiden Geräten.
 
 ---
 
+### Dateien aus iCloud Drive
+Einmal die kostenlose App **iCloud für Windows** (Microsoft Store) installieren, mit der Apple-ID
+anmelden und **iCloud Drive** anhaken. Danach zeigt Lernheft Studio deine iCloud-Dateien von selbst:
+
+- links **iCloud Drive** anklicken – oder in einer Notiz **Einfügen → Aus iCloud Drive**,
+- **Zuletzt geändert** zeigt die neuesten PDFs, Bilder und Texte quer durch alle Ordner,
+  **Ordner** zum Durchklicken, oben die Suche,
+- Doppelklick fügt die Datei ein. Dateien mit Wolken-Symbol liegen nur in der Cloud und werden
+  dabei automatisch geladen. Ist keine Notiz offen, entsteht eine neue mit dem Dateinamen als Titel.
+
+Liegt iCloud Drive woanders, kannst du den Ordner im Fenster mit **Ordner ändern …** wählen.
+
 ## 4. Alte Notizen übernehmen
 
 Am Surface: **Einstellungen → Sicherung & Umzug → Umzug starten** (oder das Angebot

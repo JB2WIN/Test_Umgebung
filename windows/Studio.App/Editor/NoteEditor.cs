@@ -722,6 +722,7 @@ public sealed class NoteEditor : UserControl
     private void ShowInsertMenu()
     {
         var menu = new ContextMenu { Placement = PlacementMode.Mouse };
+        menu.Items.Add(Ui.MenuItem("Aus iCloud Drive …", () => _ = ImportFromCloudAsync(), Ui.GlyphCloud));
         menu.Items.Add(Ui.MenuItem("Bild, PDF oder SVG aus Datei …", () => _ = ImportFileAsync(), Ui.GlyphFolder));
         menu.Items.Add(Ui.MenuItem("Seiten mit der Kamera einscannen …", Scan, Ui.GlyphCamera));
         menu.Items.Add(Ui.MenuItem("Bild aus der Zwischenablage", PasteImage, Ui.GlyphCopy, enabled: Clipboard.ContainsImage()));
@@ -786,6 +787,40 @@ public sealed class NoteEditor : UserControl
         };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
         await Importer.ImportAsync(this, dialog.FileName);
+    }
+
+    private async Task ImportFromCloudAsync()
+    {
+        if (Note is null) return;
+        var window = new CloudFilesWindow($"„{Note.Title}“") { Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() != true || window.ChosenPath is null) return;
+        await InsertCloudFileAsync(window.ChosenPath);
+    }
+
+    /// <summary>Datei aus iCloud Drive einfügen – liegt sie nur in der Cloud, lädt Windows sie dabei.</summary>
+    public async Task InsertCloudFileAsync(string path)
+    {
+        if (Note is null) return;
+        var cancel = ShowBusy($"Hole „{System.IO.Path.GetFileName(path)}“ aus iCloud …");
+        string local;
+        try
+        {
+            local = await CloudDrive.MakeLocalCopyAsync(path, cancel);
+        }
+        catch (OperationCanceledException)
+        {
+            HideBusy();
+            return;
+        }
+        catch (Exception error)
+        {
+            HideBusy();
+            Dialogs.Info(Window.GetWindow(this), "iCloud-Datei nicht verfügbar",
+                $"„{System.IO.Path.GetFileName(path)}“ ließ sich nicht laden. Ist iCloud für Windows angemeldet und online?\n\n{error.Message}");
+            return;
+        }
+        HideBusy();
+        await Importer.ImportAsync(this, local);
     }
 
     public void InsertText(string text, Point? at = null)

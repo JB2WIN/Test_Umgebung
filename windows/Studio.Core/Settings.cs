@@ -165,4 +165,5 @@ public static class Keys
 
     public const string LegacyImportAsked = "legacyImportAsked";
     public const string ListWidth = "listWidth";
+    public const string ICloudFolder = "iCloudFolder";
 }

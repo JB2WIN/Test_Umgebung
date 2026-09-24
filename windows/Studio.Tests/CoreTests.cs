@@ -522,3 +522,67 @@ public class SvgTests
     public void NumbersWithSignsAndExponents() =>
         Assert.Equal(new[] { 1.5, -2, 3e2, -0.5, 0.25 }, SvgInk.Numbers("1.5-2 3e2-.5.25"));
 }
+
+public class CloudDriveTests
+{
+    [Fact]
+    public void FindsICloudFolderInProfile()
+    {
+        using var temp = new TempFolder();
+        Assert.Null(CloudDrive.FindFolder(null, temp.Path));
+        var folder = Path.Combine(temp.Path, "iCloudDrive");
+        Directory.CreateDirectory(folder);
+        Assert.Equal(folder, CloudDrive.FindFolder(null, temp.Path));
+        var chosen = Path.Combine(temp.Path, "Eigene Wahl");
+        Directory.CreateDirectory(chosen);
+        Assert.Equal(chosen, CloudDrive.FindFolder(chosen, temp.Path));
+        Assert.Equal(folder, CloudDrive.FindFolder(Path.Combine(temp.Path, "gibt es nicht"), temp.Path));
+    }
+
+    [Fact]
+    public void ListsFoldersFirstAndOnlyInsertableFiles()
+    {
+        using var temp = new TempFolder();
+        Directory.CreateDirectory(Path.Combine(temp.Path, "Mathe"));
+        Directory.CreateDirectory(Path.Combine(temp.Path, ".versteckt"));
+        File.WriteAllText(Path.Combine(temp.Path, "Blatt.pdf"), "x");
+        File.WriteAllText(Path.Combine(temp.Path, "foto.HEIC"), "x");
+        File.WriteAllText(Path.Combine(temp.Path, "tabelle.xlsx"), "x");
+        File.WriteAllText(Path.Combine(temp.Path, ".DS_Store"), "x");
+        var entries = CloudDrive.List(temp.Path);
+        Assert.Equal(new[] { "Mathe", "Blatt.pdf", "foto.HEIC" }, entries.Select(e => e.Name));
+        Assert.Equal(CloudDrive.Kind.Folder, entries[0].Kind);
+        Assert.Equal(CloudDrive.Kind.Pdf, entries[1].Kind);
+        Assert.Equal(CloudDrive.Kind.Image, entries[2].Kind);
+    }
+
+    [Fact]
+    public void RecentAndSearchLookIntoSubfolders()
+    {
+        using var temp = new TempFolder();
+        var deep = Path.Combine(temp.Path, "Schule", "Bio");
+        Directory.CreateDirectory(deep);
+        var old = Path.Combine(temp.Path, "alt.png");
+        var fresh = Path.Combine(deep, "Zellaufbau Arbeitsblatt.pdf");
+        File.WriteAllText(old, "x");
+        File.WriteAllText(fresh, "x");
+        File.SetLastWriteTime(old, DateTime.Now.AddDays(-3));
+        var recent = CloudDrive.Recent(temp.Path);
+        Assert.Equal(fresh, recent[0].Path);
+        Assert.Equal(2, recent.Count);
+        var hits = CloudDrive.Search(temp.Path, "zell blatt");
+        Assert.Equal(fresh, Assert.Single(hits).Path);
+        Assert.Equal(Path.Combine("Schule", "Bio", "Zellaufbau Arbeitsblatt.pdf"), CloudDrive.Relative(temp.Path, fresh));
+    }
+
+    [Fact]
+    public async Task CopiesFileForImport()
+    {
+        using var temp = new TempFolder();
+        var source = Path.Combine(temp.Path, "Notiz.txt");
+        File.WriteAllText(source, "Hallo");
+        var copy = await CloudDrive.MakeLocalCopyAsync(source);
+        Assert.Equal("Notiz.txt", Path.GetFileName(copy));
+        Assert.Equal("Hallo", File.ReadAllText(copy));
+    }
+}

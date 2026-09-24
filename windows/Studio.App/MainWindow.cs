@@ -241,7 +241,8 @@ public sealed class MainWindow : Window
                      new Place("home", Ui.GlyphHome, "Übersicht"),
                      new Place("timetable", Ui.GlyphCalendar, "Stundenplan"),
                      new Place("homework", Ui.GlyphChecklist, "Hausaufgaben"),
-                     new Place("cards", Ui.GlyphCards, "Karteikarten")
+                     new Place("cards", Ui.GlyphCards, "Karteikarten"),
+                     new Place("icloud", Ui.GlyphCloud, "iCloud Drive")
                  })
         {
             var count = place.Key switch
@@ -335,7 +336,35 @@ public sealed class MainWindow : Window
                 new FlashcardsWindow { Owner = this }.ShowDialog();
                 AfterSheet();
                 break;
+            case "icloud":
+                _ = OpenCloudFileAsync();
+                break;
         }
+    }
+
+    /// <summary>
+    /// iCloud Drive aus der Seitenleiste: Ist eine Notiz offen, kommt die Datei dort hinein,
+    /// sonst entsteht eine neue Notiz mit dem Dateinamen als Titel.
+    /// </summary>
+    private async Task OpenCloudFileAsync()
+    {
+        var open = _openNoteId is Guid id ? Services.Store.Note(id) : null;
+        var target = open is not null ? $"„{open.Title}“" : "eine neue Notiz";
+        var window = new CloudFilesWindow(target) { Owner = this };
+        var chosen = window.ShowDialog() == true ? window.ChosenPath : null;
+        AfterSheet();
+        if (chosen is null) return;
+        if (open is null)
+        {
+            NewNote(null);
+            if (_openNoteId is Guid created)
+            {
+                Services.Store.UpdateNote(created, n => n.Title = System.IO.Path.GetFileNameWithoutExtension(chosen));
+                _editor.Open(created);
+                ReloadNotes();
+            }
+        }
+        await _editor.InsertCloudFileAsync(chosen);
     }
 
     /// <summary>Nach einem Fenster wie „Hausaufgaben": wieder „Übersicht“ oder die Notiz markieren.</summary>
