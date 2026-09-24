@@ -25,8 +25,8 @@ Beide sind **neue Apps** – die alte Lernheft-App bleibt unangetastet, bis du s
 Lernheft Stift im **lokalen Netzwerk** suchen darf → **Erlauben**. Für den QR-Code braucht die App
 die **Kamera**.
 
-Die Dateien kommen aus GitHub → **Actions**: „Lernheft Studio (Windows)“ → Artefakt
-`LernheftStudio-Installer`, „Lernheft Stift (iPad)“ → Artefakt `LernheftStift-ipa`.
+Beide Dateien liegen auf GitHub unter **Releases** (neueste Version oben):
+`LernheftStudio.msi` fürs Surface, `LernheftStift.ipa` fürs iPad.
 
 ---
 
@@ -93,14 +93,15 @@ In Lernheft Stift unter **Werkzeuge** (Kacheln oben):
 - **Foto einfügen** – aus deinen Fotos (auch mehrere),
 - **Seiten scannen** – mit der Kamera: Blattkanten werden erkannt und begradigt, alle Seiten kommen als ein PDF.
 
-**Aus der Vorschau-App (oder jeder anderen App):** PDF in der Vorschau öffnen, markieren, unterschreiben,
-zuschneiden … dann **Teilen → Lernheft Stift**. Lernheft Stift öffnet sich und fragt, wohin die Datei soll:
-in die offene Notiz (**als neue Seiten** oder **hier**) oder **als neue Notiz**. Ist das Surface gerade nicht
-verbunden, wartet die Datei, bis die Verbindung steht.
-
 Danach fragt das iPad: **Als neue Seiten** oder **Hier auf der Seite** (an der Stelle, die du gerade siehst).
 Das Surface fügt ohne Rückfrage ein, und die Seiten erscheinen gleich auch auf dem iPad zum Beschreiben.
 Ist am Surface keine Notiz offen, geht das auch von der Notizauswahl aus – dann entsteht eine neue Notiz.
+
+**Aus der Vorschau-App (oder jeder anderen App):** PDF in der Vorschau öffnen, markieren, unterschreiben,
+zuschneiden … dann **Teilen → Lernheft Stift** (steht es nicht in der Reihe, unter **Mehr** suchen).
+Lernheft Stift öffnet sich und fragt, wohin die Datei soll: in die offene Notiz (**als neue Seiten** oder
+**hier**) oder **als neue Notiz**. Ist das Surface gerade nicht verbunden, wartet die Datei, bis die
+Verbindung steht.
 
 ### Dateien aus iCloud Drive
 Einmal die kostenlose App **iCloud für Windows** (Microsoft Store) installieren, mit der Apple-ID
