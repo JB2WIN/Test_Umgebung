@@ -76,10 +76,47 @@ enum Demo {
                     if let stroke = InkBridge.line(points: points, width: 3, color: UIColor(hex: "#2D4BE0")) {
                         session.canvas.addStrokes([stroke])
                     }
+                    // Danach den Umzug aus einem nachgebauten Ordner der alten App prüfen.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        if let folder = try? legacyFolder() { session.migration.start(folder: folder) }
+                    }
                 }
             }
         }
         waitForNote(0)
+    }
+
+    /// Ein Ordner wie von der alten Lernheft-App: library.json, eine Notiz mit PencilKit-Zeichnung,
+    /// getipptem Text und einem eingescannten Bild.
+    private static func legacyFolder() throws -> URL {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("Lernheft", isDirectory: true)
+        try? FileManager.default.removeItem(at: root)
+        let notebook = UUID().uuidString
+        let note = UUID().uuidString
+        let library: JSON = [
+            "notebooks": [["id": notebook, "name": "Physik", "colorName": "teal"]],
+            "notes": [["id": note, "notebookID": notebook, "title": "Hebelgesetz", "paper": "lined", "pageCount": 1,
+                       "created": 700_000_000.0, "updated": 700_000_000.0, "snippet": "Hebel"]],
+            "homework": [], "decks": [], "lessons": []
+        ]
+        let folder = root.appendingPathComponent("notes/\(note)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try PadProtocol.encode(library)!.write(to: root.appendingPathComponent("library.json"))
+        let content: JSON = ["typedText": "Kraft mal Kraftarm = Last mal Lastarm", "blocks": [JSON](), "backgrounds": [JSON]()]
+        try PadProtocol.encode(content)!.write(to: folder.appendingPathComponent("content.json"))
+        var strokes: [PKStroke] = []
+        for row in 0..<3 {
+            var points: [CGPoint] = []
+            for index in 0...40 { points.append(CGPoint(x: 90 + CGFloat(index) * 9, y: 120 + CGFloat(row) * 32 + sin(CGFloat(index) / 3) * 6)) }
+            if let stroke = InkBridge.line(points: points, width: 2.5, color: UIColor(hex: "#1A1F2B")) { strokes.append(stroke) }
+        }
+        try PKDrawing(strokes: strokes).dataRepresentation().write(to: folder.appendingPathComponent("drawing.data"))
+        let scan = UIGraphicsImageRenderer(size: CGSize(width: 60, height: 40)).image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 60, height: 40))
+        }
+        try scan.jpegData(compressionQuality: 0.8)!.write(to: folder.appendingPathComponent("bg-0-scan.jpg"))
+        return root
     }
 
     /// Messbild: wie breit zeichnet PencilKit Striche bei welcher Punktgröße und welchem Druck?

@@ -16,6 +16,15 @@ var server = new PadServer(settings, "CI-Surface");
 var done = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
 var noteId = Guid.NewGuid();
 var received = new List<string>();
+var strokeOk = "";
+var importFolder = Path.Combine(folder, "import");
+var importFiles = 0;
+var importResult = "";
+
+void Check()
+{
+    if (strokeOk.Length > 0 && importResult.Length > 0) done.TrySetResult(strokeOk + " | " + importResult);
+}
 
 server.Connected += link =>
 {
@@ -25,13 +34,45 @@ server.Connected += link =>
         var type = PadProtocol.TypeOf(message);
         lock (received) received.Add(type);
         Log("empfangen: " + type + " " + Shorten(message.ToJsonString()));
-        if (type == PadProtocol.Ops && PadProtocol.StrokesFromJson(message["add"]).Count > 0)
+        if (type == PadProtocol.Ops && PadProtocol.StrokesFromJson(message["add"]).Count > 0 && strokeOk.Length == 0)
         {
             var toast = PadProtocol.Message(PadProtocol.Toast);
             toast["text"] = "Verbindung geprüft – dein Strich ist am Surface angekommen.";
             link.Send(toast);
             var stroke = PadProtocol.StrokesFromJson(message["add"])[0];
-            done.TrySetResult($"OK Strich {stroke.Id} mit {stroke.Count} Punkten, Breite {stroke.Width}, Art {stroke.Kind}");
+            strokeOk = $"OK Strich {stroke.Id} mit {stroke.Count} Punkten, Breite {stroke.Width}, Art {stroke.Kind}";
+            Check();
+        }
+        else if (type == PadProtocol.ImportBegin)
+        {
+            Directory.CreateDirectory(importFolder);
+        }
+        else if (type == PadProtocol.ImportFile)
+        {
+            var target = LegacyImport.TargetPath(importFolder, message.String("id") ?? "");
+            var data = message.String("data");
+            if (target is not null && data is not null)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                File.WriteAllBytes(target, Convert.FromBase64String(data));
+                importFiles++;
+            }
+        }
+        else if (type == PadProtocol.ImportEnd)
+        {
+            var store = new LibraryStore(Path.Combine(folder, "studio"));
+            var report = LegacyImport.ImportFolder(importFolder, store);
+            var strokes = store.Library.Notes.Sum(n => store.LoadInk(n.Id).Strokes.Count);
+            var reply = PadProtocol.Message(PadProtocol.ImportDone);
+            reply["ok"] = report.Notes > 0;
+            reply["notes"] = report.Notes;
+            reply["message"] = report.Summary;
+            link.Send(reply);
+            importResult = report.Notes > 0 && strokes > 0
+                ? $"Umzug: {importFiles} Dateien, {report.Notes} Notizen, {strokes} Striche – {report.Summary}"
+                : $"Umzug unvollständig: {importFiles} Dateien, {report.Notes} Notizen, {strokes} Striche";
+            if (!(report.Notes > 0 && strokes > 0)) done.TrySetResult("FEHLER " + importResult);
+            Check();
         }
     };
 
