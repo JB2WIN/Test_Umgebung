@@ -1,11 +1,12 @@
 name: Release
 
-# Ein Tag wie „v1.0.0“ baut Lernheft Studio (MSI) und Lernheft Pad (IPA) frisch
-# und legt beide als GitHub-Release ab.
+# Eine neue Versionsnummer in RELEASE_VERSION baut Lernheft Studio (MSI) und Lernheft Pad (IPA)
+# frisch, setzt den Tag „v<Version>“ und legt beide als GitHub-Release ab.
 on:
   push:
-    tags:
-      - "v*"
+    paths:
+      - "RELEASE_VERSION"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -27,7 +28,7 @@ jobs:
       - name: App veröffentlichen
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart("v")
+          $version = (Get-Content RELEASE_VERSION -Raw).Trim()
           dotnet publish windows/Studio.App/Studio.App.csproj -c Release -r win-x64 --self-contained true `
             -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
             -p:DebugType=none -p:Version=$version -o windows/dist/app
@@ -35,7 +36,7 @@ jobs:
       - name: Installer bauen
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart("v")
+          $version = (Get-Content RELEASE_VERSION -Raw).Trim()
           dotnet tool install --global wix --version 5.0.2
           wix build installer/Studio.wxs -arch x64 -d Version=$version -d PublishDir=windows\dist\app -d IconFile=windows\Studio.App\app.ico -o windows\dist\LernheftStudio.msi
           Get-Item windows\dist\LernheftStudio.msi | Format-Table Name, Length
@@ -62,7 +63,7 @@ jobs:
 
       - name: App bauen (unsigniert)
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="$(tr -d '[:space:]' < ../RELEASE_VERSION)"
           xcodebuild -project LernheftPad.xcodeproj -scheme LernheftPad -configuration Release \
             -destination 'generic/platform=iOS' -derivedDataPath build/device \
             MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}" \
@@ -92,10 +93,16 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Version lesen
+        id: version
+        run: echo "value=$(tr -d '[:space:]' < RELEASE_VERSION)" >> "$GITHUB_OUTPUT"
+
       - name: Release anlegen
         uses: softprops/action-gh-release@v2
         with:
-          name: Lernheft Studio & Lernheft Pad ${{ github.ref_name }}
+          tag_name: v${{ steps.version.outputs.value }}
+          target_commitish: ${{ github.sha }}
+          name: Lernheft Studio & Lernheft Pad ${{ steps.version.outputs.value }}
           body_path: .github/release-notes.md
           files: |
             dist/LernheftStudio.msi

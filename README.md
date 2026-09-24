@@ -26,6 +26,11 @@ Bedienung und Einrichtung: [ANLEITUNG.md](ANLEITUNG.md)
 - iPad: die GitHub-Action baut ein unsigniertes IPA und Simulator-Bildschirmfotos (Zweig `ci-shots-ipad`).
   Demo-Ansichten: App mit `-demo draw|select|picker|function|settings|connect` starten.
 
+## Neue Version veröffentlichen
+
+Versionsnummer in `RELEASE_VERSION` erhöhen und pushen – die Action „Release“ baut MSI und IPA,
+setzt den Tag `v<Version>` und legt beides unter *Releases* ab.
+
 ## Verbindung
 
 WebSocket im eigenen WLAN, JSON-Nachrichten (`windows/Studio.Core/PadProtocol.cs` ↔
