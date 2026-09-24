@@ -50,7 +50,8 @@ jobs:
         shell: pwsh
         run: |
           dotnet tool install --global wix --version 5.0.2
-          $version = "1.0.$env:GITHUB_RUN_NUMBER"
+          # Testbauten bleiben unter jeder echten Version (RELEASE_VERSION), damit ein Release sie immer ersetzt.
+          $version = "0.9.$env:GITHUB_RUN_NUMBER"
           wix build installer/Studio.wxs -arch x64 -d Version=$version -d PublishDir=windows\dist\app -d IconFile=windows\Studio.App\app.ico -o windows\dist\LernheftStudio.msi
           Get-Item windows\dist\LernheftStudio.msi | Format-Table Name, Length
 
