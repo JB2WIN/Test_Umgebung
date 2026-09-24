@@ -16,6 +16,7 @@ Beide sind **neue Apps** – die alte Lernheft-App bleibt unangetastet, bis du s
 ### Surface
 1. `LernheftStudio.msi` doppelklicken. Kein Administrator nötig, landet unter
    `%LOCALAPPDATA%\Programs\Lernheft Studio`, mit Verknüpfung im Startmenü und auf dem Desktop.
+   **.NET muss nicht installiert sein** – alles Nötige steckt schon im Installer.
 2. Lernheft Studio öffnen. Beim ersten Start fragt Windows evtl. nach der **Firewall** →
    **Zulassen** (privates Netzwerk genügt). Ohne Freigabe klappt es meistens trotzdem, weil
    das Surface dann das iPad von sich aus anruft.
