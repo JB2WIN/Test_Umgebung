@@ -538,7 +538,10 @@ public sealed class MainWindow : Window
         if (note.Snippet.Length > 0)
         {
             var snippet = Ui.Text(note.Snippet, 12.5, color: "Muted", wrap: true, margin: new Thickness(0, 3, 0, 0));
-            snippet.MaxHeight = 36;
+            // Feste Zeilenhöhe: genau zwei Zeilen, die zweite endet bei Bedarf mit „…“.
+            snippet.LineHeight = 17;
+            snippet.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+            snippet.MaxHeight = 34.5;
             snippet.TextTrimming = TextTrimming.CharacterEllipsis;
             stack.Children.Add(snippet);
         }
