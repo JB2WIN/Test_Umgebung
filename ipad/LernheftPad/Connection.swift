@@ -225,6 +225,8 @@ final class PadConnection {
 
     @ObservationIgnored private var link: Link?
     @ObservationIgnored private var candidates: [String: Link] = [:]
+    @ObservationIgnored private var helloPending: Link?
+    @ObservationIgnored private var readyQueue: [Link] = []
     @ObservationIgnored private var offer: PairingOffer?
     @ObservationIgnored private var code: String?
     @ObservationIgnored private var browser: NWBrowser?
@@ -420,7 +422,7 @@ final class PadConnection {
         candidates[key] = candidate
         candidate.onReady = { [weak self, weak candidate] in
             guard let self, let candidate else { return }
-            candidate.send(self.hello())
+            self.ready(candidate)
         }
         candidate.onMessage = { [weak self, weak candidate] message in
             guard let self, let candidate else { return }
@@ -429,11 +431,40 @@ final class PadConnection {
         candidate.onClosed = { [weak self, weak candidate] in
             guard let self else { return }
             if self.candidates[key] === candidate { self.candidates[key] = nil }
+            if let candidate { self.handshakeFinished(candidate) }
         }
         candidate.start()
         DispatchQueue.main.asyncAfter(deadline: .now() + 9) { [weak self, weak candidate] in
             guard let self, let candidate, self.link !== candidate else { return }
             candidate.close()
+        }
+    }
+
+    /// Immer nur eine Anmeldung gleichzeitig: Meldet sich das iPad über zwei Wege parallel an,
+    /// übernimmt das Surface jeweils die neuere Leitung und kappt die ältere – ein Pingpong.
+    private func ready(_ candidate: Link) {
+        guard link == nil else {
+            candidate.close()
+            return
+        }
+        if helloPending == nil || helloPending!.isClosed {
+            helloPending = candidate
+            candidate.send(hello())
+        } else if !readyQueue.contains(where: { $0 === candidate }) {
+            readyQueue.append(candidate)
+        }
+    }
+
+    private func handshakeFinished(_ candidate: Link) {
+        readyQueue.removeAll { $0 === candidate }
+        guard helloPending === candidate else { return }
+        helloPending = nil
+        while !readyQueue.isEmpty {
+            let next = readyQueue.removeFirst()
+            if !next.isClosed {
+                ready(next)
+                break
+            }
         }
     }
 
@@ -464,6 +495,7 @@ final class PadConnection {
                 return
             }
             candidates[key] = nil
+            helloPending = nil
             welcome(candidate, message: message)
         case PadProtocol.denied:
             let reason = message.string("reason") ?? ""
@@ -546,8 +578,10 @@ final class PadConnection {
     }
 
     private func closeCandidates() {
-        let all = candidates.values
+        let all = Array(candidates.values) + readyQueue
         candidates = [:]
+        readyQueue = []
+        helloPending = nil
         all.forEach { $0.close() }
     }
 
